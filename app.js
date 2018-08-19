@@ -27,7 +27,7 @@ if (cluster.isMaster) {
     var express = require('express');
     var bodyParser = require('body-parser');
 
-    AWS.config.region = process.env.REGION
+    // AWS.config.region = process.env.REGION
 
     // var sns = new AWS.SNS();
     // var ddb = new AWS.DynamoDB();
