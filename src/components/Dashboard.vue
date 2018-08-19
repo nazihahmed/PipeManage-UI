@@ -4,9 +4,9 @@
     <b-container fluid>
       <div v-for="row in bRows">
         <br>
-        <!-- <b-card-group>
+        <b-card-group>
           <BaseBlock v-for="nav in baseNavs"/>
-        </b-card-group> -->
+        </b-card-group>
       </div>
     </b-container>
   </div>
