@@ -60,11 +60,6 @@ if (cluster.isMaster) {
         device.publish('topic_2', JSON.stringify({ test_data: 1}));
       });
 
-    device
-      .on('message', function(topic, payload) {
-        console.log('message', topic, payload.toString());
-      });
-
     console.log("credentials",AWS.config.credentials)
 
     // var sns = new AWS.SNS();
@@ -82,6 +77,11 @@ if (cluster.isMaster) {
 
     io.on('connection', function(socket){
       console.log('a user connected');
+      device
+        .on('message', function(topic, payload) {
+          console.log('message', topic, payload.toString());
+          socket.emit(topic, payload.toString())
+        });
       socket.on('disconnect', function(){
         console.log('user disconnected');
       });

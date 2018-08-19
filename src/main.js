@@ -50,9 +50,10 @@ requireComponent.keys().forEach(fileName => {
 const socket = io('http://localhost:8081');
 window.socket = socket;
 socket.on('connect', function(){});
-socket.on('event', function(data){});
+socket.on('topic_1', function(data){
+  alert(data);
+});
 socket.on('disconnect', function(){});
-socket.emit('chat message','hey hey')
 
 /* eslint-disable no-new */
 new Vue({
