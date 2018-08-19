@@ -1,10 +1,10 @@
 # build stage
-FROM node:9.11.1-alpine
+FROM node:8.11
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-EXPOSE 8081 3000
+EXPOSE 8081
 CMD ["npm", "start"]
