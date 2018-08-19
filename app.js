@@ -23,11 +23,18 @@ if (cluster.isMaster) {
 
 // Code to run if we're in a worker process
 } else {
-    var AWS = require('aws-sdk');
-    var express = require('express');
-    var bodyParser = require('body-parser');
+    const AWS = require('aws-sdk');
+    const express = require('express');
+    const bodyParser = require('body-parser');
+    const awsIot = require('aws-iot-device-sdk');
 
     // AWS.config.region = process.env.REGION
+    AWS.config.region = 'us-west-2'; // Region
+    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+        IdentityPoolId: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
+    });
+
+    console.log("credentials",AWS.config.credentials)
 
     // var sns = new AWS.SNS();
     // var ddb = new AWS.DynamoDB();
@@ -37,13 +44,6 @@ if (cluster.isMaster) {
     var app = express();
     app.use(bodyParser.urlencoded({extended:false}));
 
-    // app.get('/', function(req, res) {
-    //     res.render('index', {
-    //         static_path: 'static',
-    //         theme: process.env.THEME || 'flatly',
-    //         flask_debug: process.env.FLASK_DEBUG || 'false'
-    //     });
-    // });
     app.use(
       "/",
       express.static("dist")
