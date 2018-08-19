@@ -47,7 +47,7 @@ requireComponent.keys().forEach(fileName => {
   )
 })
 
-const socket = io(window.location.origin);
+const socket = io();
 window.socket = socket;
 socket.on('connect', function(){});
 socket.on('topic_1', function(data){

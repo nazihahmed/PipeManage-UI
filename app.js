@@ -70,10 +70,13 @@ if (cluster.isMaster) {
     app.use(bodyParser.urlencoded({extended:false}));
     app.use(cors());
 
-    app.use(
-      "/",
-      express.static("dist")
-    );
+    // app.use(
+    //   "/",
+    //   express.static("dist")
+    // );
+    app.get('/', function(req, res){
+      res.sendFile(__dirname + 'dist/index.html');
+    });
 
     io.on('connection', function(socket){
       console.log('a user connected');
