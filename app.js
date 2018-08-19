@@ -1,33 +1,32 @@
-// Include the cluster module
-var cluster = require('cluster');
-
-// Code to run if we're in the master process
-if (cluster.isMaster) {
-
-    // Count the machine's CPUs
-    var cpuCount = require('os').cpus().length;
-
-    // Create a worker for each CPU
-    for (var i = 0; i < cpuCount; i += 1) {
-        cluster.fork();
-    }
-
-    // Listen for terminating workers
-    cluster.on('exit', function (worker) {
-
-        // Replace the terminated workers
-        console.log('Worker ' + worker.id + ' died :(');
-        cluster.fork();
-
-    });
-
-// Code to run if we're in a worker process
-} else {
+// // Include the cluster module
+// var cluster = require('cluster');
+//
+// // Code to run if we're in the master process
+// if (cluster.isMaster) {
+//
+//     // Count the machine's CPUs
+//     var cpuCount = require('os').cpus().length;
+//
+//     // Create a worker for each CPU
+//     for (var i = 0; i < cpuCount; i += 1) {
+//         cluster.fork();
+//     }
+//
+//     // Listen for terminating workers
+//     cluster.on('exit', function (worker) {
+//
+//         // Replace the terminated workers
+//         console.log('Worker ' + worker.id + ' died :(');
+//         cluster.fork();
+//
+//     });
+//
+// // Code to run if we're in a worker process
+// } else {
     const AWS = require('aws-sdk');
     var express = require('express');
     var app = express();
     var http = require('http').Server(app);
-    var io = require('socket.io')(http);
     const bodyParser = require('body-parser');
     const awsIot = require('aws-iot-device-sdk');
     const cors = require('cors');
@@ -78,6 +77,13 @@ if (cluster.isMaster) {
       res.sendFile(__dirname + '/dist/index.html');
     });
 
+
+    var port = process.env.PORT || 8081;
+
+    var server = app.listen(port, function () {
+        console.log('Server running at http://127.0.0.1:' + port + '/');
+    });
+    var io = require('socket.io').listen(server);
     io.on('connection', function(socket){
       console.log('a user connected');
       device
@@ -92,11 +98,4 @@ if (cluster.isMaster) {
         console.log('message: ' + msg);
       });
     });
-
-
-    var port = process.env.PORT || 8081;
-
-    var server = http.listen(port, function () {
-        console.log('Server running at http://127.0.0.1:' + port + '/');
-    });
-}
+// }
