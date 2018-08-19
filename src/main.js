@@ -47,8 +47,7 @@ requireComponent.keys().forEach(fileName => {
   )
 })
 
-const socket = io();
-window.socket = socket;
+var socket = io.connect({ transports: ["websocket"] });
 socket.on('connect', function(){});
 socket.on('topic_1', function(data){
   alert(data);
