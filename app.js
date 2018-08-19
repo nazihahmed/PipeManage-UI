@@ -70,12 +70,12 @@ if (cluster.isMaster) {
     app.use(bodyParser.urlencoded({extended:false}));
     app.use(cors());
 
-    // app.use(
-    //   "/",
-    //   express.static("dist")
-    // );
+    app.use(
+      "/static",
+      express.static(__dirname + "/dist/static")
+    );
     app.get('/', function(req, res){
-      res.sendFile(__dirname + 'dist/index.html');
+      res.sendFile(__dirname + '/dist/index.html');
     });
 
     io.on('connection', function(socket){
