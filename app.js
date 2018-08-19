@@ -12,12 +12,12 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
     IdentityPoolId: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
 });
 
-const rootCertPath = 'intel-manage-secrets';
+// const rootCertPath = 'intel-manage-secrets';
 
 var device = awsIot.device({
-   keyPath: rootCertPath + '/deviceCert.key',
-  certPath: rootCertPath + '/deviceCertAndCACert.crt',
-    caPath: rootCertPath + '/root.pem',
+   keyPath: 'deviceCert.key',
+  certPath: 'deviceCertAndCACert.crt',
+    caPath: 'root.pem',
   sessionToken: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
   // clientId: "nazihTest",
       host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
