@@ -60,7 +60,9 @@ var server = app.listen(port, function () {
     console.log('Server running at http://127.0.0.1:' + port + '/');
 });
 var io = require('socket.io').listen(server);
-io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
+if(process.env.REDIS_ENDPOINT) {
+  io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
+}
 io.on('connection', function(socket){
   console.log('a user connected');
   device
