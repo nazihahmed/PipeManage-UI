@@ -19,8 +19,8 @@ var device = awsIot.device({
     keyPath: 'deviceCert.key',
     certPath: 'deviceCertAndCACert.crt',
     caPath: 'root.pem',
-    // sessionToken: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
-    // clientId: "nazihTest",
+    sessionToken: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
+    clientId: "nazihTest",
     host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
 });
 
@@ -68,7 +68,7 @@ io.on('connection', function(socket){
   device
     .on('message', function(topic, payload) {
       console.log('message', topic, payload.toString());
-      socket.emit(topic, payload.toString())
+      socket.emit('message', payload.toString())
     });
   socket.on('disconnect', function(){
     console.log('user disconnected');

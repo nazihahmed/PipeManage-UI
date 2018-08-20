@@ -49,7 +49,7 @@ requireComponent.keys().forEach(fileName => {
 
 var socket = io.connect({ transports: ["websocket"] });
 socket.on('connect', function(){});
-socket.on('topic_1', function(data){
+socket.on('message', function(data){
   alert(data);
 });
 socket.on('disconnect', function(){});
