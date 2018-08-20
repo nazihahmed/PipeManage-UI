@@ -16,12 +16,12 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 // const rootCertPath = 'intel-manage-secrets';
 
 var device = awsIot.device({
-   keyPath: 'deviceCert.key',
-  certPath: 'deviceCertAndCACert.crt',
+    keyPath: 'deviceCert.key',
+    certPath: 'deviceCertAndCACert.crt',
     caPath: 'root.pem',
-  sessionToken: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
-  // clientId: "nazihTest",
-      host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
+    // sessionToken: 'us-west-2:1a2d49ed-f46a-462c-8757-9fafd1635e2c',
+    // clientId: "nazihTest",
+    host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
 });
 
 //
@@ -31,8 +31,8 @@ var device = awsIot.device({
 device
   .on('connect', function() {
     console.log('connect');
-    device.subscribe('topic_1');
-    device.publish('topic_2', JSON.stringify({ test_data: 1}));
+    device.subscribe('foo/bar');
+    device.publish('foo/bar', JSON.stringify({ message: "Hello from the app"}));
   });
 
 console.log("credentials",AWS.config.credentials)
