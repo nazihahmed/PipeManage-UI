@@ -5,6 +5,7 @@ const http = require('http').Server(app);
 const bodyParser = require('body-parser');
 const awsIot = require('aws-iot-device-sdk');
 const cors = require('cors');
+const redis = require('socket.io-redis');
 
 // AWS.config.region = process.env.REGION
 AWS.config.region = 'us-west-2'; // Region
@@ -59,6 +60,7 @@ var server = app.listen(port, function () {
     console.log('Server running at http://127.0.0.1:' + port + '/');
 });
 var io = require('socket.io').listen(server);
+io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
 io.on('connection', function(socket){
   console.log('a user connected');
   device
