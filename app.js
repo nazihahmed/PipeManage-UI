@@ -61,6 +61,17 @@ const getShadow = thingName => {
   })
 };
 
+const updateShadow = (thingName, shadow) => {
+  return new Promise((resolve, reject) => {
+    let clientTokenUpdate = thingShadows.update(thingName, shadow);
+    console.log("updating shadow",thingName, shadow, clientTokenUpdate)
+    if (clientTokenUpdate === null) {
+      reject();
+    }
+    resolve(clientTokenUpdate);
+  })
+};
+
 let registeredThings = [];
 
 const registerInterestInThing = (thingName) => {
@@ -69,7 +80,7 @@ const registerInterestInThing = (thingName) => {
       if (!registeredThings.find(thing => thing.thingName === thingName)) {
         thingShadows.register( thingName, {}, async () => {
           const token = await getShadow(thingName);
-          registeredThings.push({ thingName, token, tokenVerified: false });
+          registeredThings.push({ thingName, token, tokenVerified: false, get: true });
           resolve();
         });
       } else {
@@ -77,6 +88,7 @@ const registerInterestInThing = (thingName) => {
         let thing = registeredThings.find(thing => thing.thingName === thingName);
         thing.token = token;
         thing.tokenVerified = false;
+        thing.get = true;
         resolve();
       }
     } catch (err) {
@@ -84,6 +96,18 @@ const registerInterestInThing = (thingName) => {
     }
   });
 };
+
+const updateThingShadow = async (thingName, desired) => {
+  let thing = registeredThings.find(thing => thing.thingName === thingName);
+  thing.tokenVerified = false;
+  thing.get = false;
+  const token = await updateShadow(thing.thingName, {
+    state: {
+      desired
+    }
+  });
+  thing.token = token;
+}
 
 io.on('connection', socket => {
 
@@ -102,27 +126,35 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('updateShadow', desired => {
-    thingShadows.update(thing, {
-      state: {
-        desired
-      }
-    });
+  socket.on('updateShadow', async ({thingName, desired}) => {
+    console.log(`received update to ${thingName}`)
+    try {
+      await updateThingShadow(thingName, desired);
+      console.log("received registration token",registeredThings)
+    } catch(err) {
+      console.error(err);
+      console.log(`failed to update ${thingName} state`);
+    }
   });
 
   thingShadows.on('status',(thingName, stat, clientToken, stateObject) => {
-    console.log(`received ${stat} on ${thingName} token ${clientToken}`);
+    console.log(`received ${stat} on ${thingName} token ${clientToken}`,stateObject);
     let thing = registeredThings.find(thing => (thing.token === clientToken) && !thing.tokenVerified);
-    if(stat === 'accepted' && thing && stateObject) {
+    if(stat === 'accepted' && thing && stateObject && thing.get) {
       thing.tokenVerified = true;
-      socket.emit(`things/${thing.thingName}/shadow`,stateObject);
+      socket.emit(`things/${thing.thingName}/shadow/get`,stateObject);
       console.log("got shadow back",stateObject)
     }
   });
 
   thingShadows.on('delta',(thingName, stateObject) => {
-    console.log(`received delta on ${thingName}`)
-    socket.emit('shadowUpdated',stateObject);
+    console.log(`received delta on ${thingName}`,stateObject)
+    let thing = registeredThings.find(thing => (thing.thingName === thingName) && !thing.tokenVerified);
+    if(thing && stateObject && !thing.get) {
+      thing.tokenVerified = true;
+      socket.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+      console.log("got shadow updated",stateObject)
+    }
   });
 
   thingShadows.on('timeout',(thingName, clientToken) =>

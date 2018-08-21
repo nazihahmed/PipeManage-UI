@@ -57,14 +57,34 @@ socket.on('connect', () => {
 socket.on('things', data => {
   console.log("got things",data);
 });
-socket.on('shadow', data => {
-  console.log("received shadow",data);
-});
-socket.on('shadowUpdated', data => {
-  console.log("received shadow update",data);
-});
 
-window.socket = socket;
+let sockets = [];
+
+const listToTopic = (topic, action) => {
+  if(sockets.indexOf(topic)===-1) {
+    sockets.push(topic);
+    socket.on(topic, shadow => {
+      console.log(`received ${action} shadow`, shadow);
+    });
+  }
+}
+
+const getShadow = thingName => {
+  listToTopic(`things/${thingName}/shadow/get`,'get');
+  socket.emit('getShadow',thingName);
+}
+
+window.getShadow = getShadow;
+
+const updateShadow = (thingName, desired) => {
+  listToTopic(`things/${thingName}/shadow/update`,'update');
+  if(sockets.indexOf(`things/${thingName}/shadow/get`) === -1) {
+    throw new Error('thing must be registered, use getShadow first');
+  }
+  socket.emit('updateShadow',{thingName, desired});
+}
+
+window.updateShadow = updateShadow;
 
 socket.on('disconnect', () => console.log("disconnected from socket"));
 // window.socket = socket;
