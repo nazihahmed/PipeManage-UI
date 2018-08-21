@@ -148,7 +148,7 @@ io.on('connection', socket => {
     let thing = registeredThings.find(thing => (thing.token === clientToken) && !thing.tokenVerified);
     if(stat === 'accepted' && thing && stateObject && thing.get) {
       thing.tokenVerified = true;
-      socket.emit(`things/${thing.thingName}/shadow/get`,stateObject);
+      io.emit(`things/${thing.thingName}/shadow/get`,stateObject);
       console.log("got shadow back",`things/${thing.thingName}/shadow/get`,stateObject)
     }
   });
@@ -158,7 +158,7 @@ io.on('connection', socket => {
     let thing = registeredThings.find(thing => (thing.thingName === thingName) && !thing.tokenVerified);
     if(thing && stateObject && !thing.get) {
       thing.tokenVerified = true;
-      socket.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+      io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
       console.log("got shadow updated",stateObject)
     }
   });

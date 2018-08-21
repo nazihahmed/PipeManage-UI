@@ -63,6 +63,7 @@ let sockets = [];
 const listenToSocket = (topic, action) => {
   if(sockets.indexOf(topic)===-1) {
     sockets.push(topic);
+    console.log("listening to ",topic)
     socket.on(topic, shadow => {
       console.log(`received ${action} shadow`, shadow);
     });
