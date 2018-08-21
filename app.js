@@ -40,8 +40,50 @@ const certs = {
     host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
 };
 
-const thingShadows = awsIot.thingShadow(certs);
+const thingShadows = awsIot.thingShadow(certs, {
+  ignoreDeltas: true,
+});
 const iot = new AWS.Iot({apiVersion: '2015-05-28'});
+
+const subscribeToTopic = (topic, emittingTopic) => {
+  thingShadows.subscribe(topic, {}, (err, data) => {
+    console.log("got data on topic",topic,data);
+  });
+}
+
+const getShadow = thingName => {
+  return new Promise((resolve, reject) => {
+    let clientTokenUpdate = thingShadows.get(thingName);
+    if (clientTokenUpdate === null) {
+      reject();
+    }
+    resolve(clientTokenUpdate);
+  })
+};
+
+let registeredThings = [];
+
+const registerInterestInThing = (thingName) => {
+  return new Promise(async (resolve,reject) => {
+    try {
+      if (!registeredThings.find(thing => thing.thingName === thingName)) {
+        thingShadows.register( thingName, {}, async () => {
+          const token = await getShadow(thingName);
+          registeredThings.push({ thingName, token, tokenVerified: false });
+          resolve();
+        });
+      } else {
+        const token = await getShadow(thingName);
+        let thing = registeredThings.find(thing => thing.thingName === thingName);
+        thing.token = token;
+        thing.tokenVerified = false;
+        resolve();
+      }
+    } catch (err) {
+      reject();
+    }
+  });
+};
 
 io.on('connection', socket => {
 
@@ -49,16 +91,14 @@ io.on('connection', socket => {
     console.log("got things", data)
     socket.emit('things', data);
   });
-  let thing = '';
-  socket.on('getShadow', thingName => {
-    console.log("received interest in",thingName)
-    if(!thing) {
-      thingShadows.register( thingName, {}, function() {
-        thing = thingName;
-        thingShadows.get(thingName)
-      });
-    } else {
-      thingShadows.get(thingName);
+
+  socket.on('getShadow', async (thingName) => {
+    console.log(`received interest in ${thingName}`)
+    try {
+      await registerInterestInThing(thingName);
+      console.log("received registration token",registeredThings)
+    } catch(err) {
+      console.log("couldn't register interst in token",err);
     }
   });
 
@@ -71,9 +111,12 @@ io.on('connection', socket => {
   });
 
   thingShadows.on('status',(thingName, stat, clientToken, stateObject) => {
-    console.log(`received ${stat} on ${thingName}`);
-    if(stat === 'accepted' && stateObject) {
-      socket.emit('shadow',stateObject);
+    console.log(`received ${stat} on ${thingName} token ${clientToken}`);
+    let thing = registeredThings.find(thing => (thing.token === clientToken) && !thing.tokenVerified);
+    if(stat === 'accepted' && thing && stateObject) {
+      thing.tokenVerified = true;
+      socket.emit(`things/${thing.thingName}/shadow`,stateObject);
+      console.log("got shadow back",stateObject)
     }
   });
 
