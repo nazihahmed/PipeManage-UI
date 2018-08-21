@@ -54,14 +54,17 @@ const socket = io.connect(`http://${hostname}${port}`);
 socket.on('connect', () => {
   console.log("connected to socket")
 });
-socket.on('testing', data => {
-  console.log("got things");
-});
-socket.on('testing2', data => {
+socket.on('things', data => {
   console.log("got things",data);
 });
+socket.on('shadow', data => {
+  console.log("received shadow",data);
+});
+socket.on('shadowUpdated', data => {
+  console.log("received shadow update",data);
+});
 
-
+window.socket = socket;
 
 socket.on('disconnect', () => console.log("disconnected from socket"));
 // window.socket = socket;
