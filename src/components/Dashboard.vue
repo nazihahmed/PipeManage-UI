@@ -5,7 +5,7 @@
       <div v-for="row in bRows">
         <br>
         <b-card-group>
-          <BaseBlock v-for="nav in baseNavs"/>
+          <!-- <BaseBlock v-for="nav in baseNavs"/> -->
         </b-card-group>
       </div>
     </b-container>

@@ -45,14 +45,26 @@ requireComponent.keys().forEach(fileName => {
     // otherwise fall back to module's root.
     componentConfig.default || componentConfig
   )
-})
-
-var socket = io.connect({ transports: ["websocket"] });
-socket.on('connect', function(){});
-socket.on('message', function(data){
-  alert(data);
 });
-socket.on('disconnect', function(){});
+
+const {hostname} = window.location;
+const port = hostname === 'localhost' ? ':3000' : '';
+const socket = io.connect(`http://${hostname}${port}`);
+
+socket.on('connect', () => {
+  console.log("connected to socket")
+});
+socket.on('testing', data => {
+  console.log("got things");
+});
+socket.on('testing2', data => {
+  console.log("got things",data);
+});
+
+
+
+socket.on('disconnect', () => console.log("disconnected from socket"));
+// window.socket = socket;
 
 /* eslint-disable no-new */
 new Vue({
