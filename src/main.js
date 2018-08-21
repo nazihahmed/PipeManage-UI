@@ -72,13 +72,13 @@ const listenToSocket = (topic, action) => {
 
 const getShadow = thingName => {
   listenToSocket(`things/${thingName}/shadow/get`,'get');
+  listenToSocket(`things/${thingName}/shadow/update`,'update');
   socket.emit('getShadow',thingName);
 }
 
 window.getShadow = getShadow;
 
 const updateShadow = (thingName, desired) => {
-  listenToSocket(`things/${thingName}/shadow/update`,'update');
   if(sockets.indexOf(`things/${thingName}/shadow/get`) === -1) {
     throw new Error('thing must be registered, use getShadow first');
   }
