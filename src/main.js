@@ -60,7 +60,7 @@ socket.on('things', data => {
 
 let sockets = [];
 
-const listToTopic = (topic, action) => {
+const listenToSocket = (topic, action) => {
   if(sockets.indexOf(topic)===-1) {
     sockets.push(topic);
     socket.on(topic, shadow => {
@@ -70,14 +70,14 @@ const listToTopic = (topic, action) => {
 }
 
 const getShadow = thingName => {
-  listToTopic(`things/${thingName}/shadow/get`,'get');
+  listenToSocket(`things/${thingName}/shadow/get`,'get');
   socket.emit('getShadow',thingName);
 }
 
 window.getShadow = getShadow;
 
 const updateShadow = (thingName, desired) => {
-  listToTopic(`things/${thingName}/shadow/update`,'update');
+  listenToSocket(`things/${thingName}/shadow/update`,'update');
   if(sockets.indexOf(`things/${thingName}/shadow/get`) === -1) {
     throw new Error('thing must be registered, use getShadow first');
   }

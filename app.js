@@ -80,11 +80,17 @@ const registerInterestInThing = (thingName) => {
       if (!registeredThings.find(thing => thing.thingName === thingName)) {
         thingShadows.register( thingName, {}, async () => {
           const token = await getShadow(thingName);
+          if (token === null) {
+            reject();
+          }
           registeredThings.push({ thingName, token, tokenVerified: false, get: true });
           resolve();
         });
       } else {
         const token = await getShadow(thingName);
+        if (token === null) {
+          reject();
+        }
         let thing = registeredThings.find(thing => thing.thingName === thingName);
         thing.token = token;
         thing.tokenVerified = false;
@@ -143,7 +149,7 @@ io.on('connection', socket => {
     if(stat === 'accepted' && thing && stateObject && thing.get) {
       thing.tokenVerified = true;
       socket.emit(`things/${thing.thingName}/shadow/get`,stateObject);
-      console.log("got shadow back",stateObject)
+      console.log("got shadow back",`things/${thing.thingName}/shadow/get`,stateObject)
     }
   });
 
