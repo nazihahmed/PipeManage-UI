@@ -35,7 +35,7 @@ if(process.env.REDIS_ENDPOINT) {
 
 const certs = {
     keyPath: 'deviceCert.key',
-    certPath: 'deviceCertAndCACert.crt',
+    certPath: 'deviceCert.crt',
     caPath: 'root.pem',
     host: `a2s7dpv6qj1qss.iot.us-west-2.amazonaws.com`
 };
