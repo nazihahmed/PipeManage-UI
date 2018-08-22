@@ -194,7 +194,11 @@ io.on('connection', socket => {
     console.log("received status",thingName, stat, clientToken)
     if(thing && stateObject) {
       thing.tokenVerified = true;
-      if(stat === 'accepted' && thing.operation !== 'update') {
+      if(stat === 'accepted') {
+        if (thing.operation === 'delete') {
+          thingShadows.unregister(thingName);
+          registeredThings = thingShadows.filter(thing => thing.thingName !== thingName);
+        }
         return io.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
       }
       console.log("failed to get shadow")
