@@ -73,10 +73,20 @@ const listenToSocket = (topic, action) => {
 const getShadow = thingName => {
   listenToSocket(`things/${thingName}/shadow/get`,'get');
   listenToSocket(`things/${thingName}/shadow/update`,'update');
+  listenToSocket(`things/${thingName}/shadow/delete`,'delete');
+  listenToSocket(`things/${thingName}/shadow/get/failed`,'failue to get');
+  listenToSocket(`things/${thingName}/shadow/update/failed`,'failue to update');
+  listenToSocket(`things/${thingName}/shadow/delete/failed`,'failue to delete');
   socket.emit('getShadow',thingName);
 }
 
 window.getShadow = getShadow;
+
+const deleteShadow = thingName => {
+  socket.emit('deleteShadow',thingName);
+}
+
+window.deleteShadow = deleteShadow;
 
 const updateShadow = (thingName, desired) => {
   if(sockets.indexOf(`things/${thingName}/shadow/get`) === -1) {
