@@ -148,10 +148,14 @@ const deleteThingShadow = async (thingName) => {
 
 io.on('connection', socket => {
 
-  iot.listThings({}, (err,data) => {
-    console.log("got things", data)
-    socket.emit('things', data);
-  });
+  socket.on('getThings', () => {
+    iot.listThings({}, (err,data) => {
+      if(err) {
+        return socket.emit('things/error');
+      }
+      socket.emit('things', data);
+    });
+  })
 
   socket.on('getShadow', async (thingName) => {
     console.log(`received interest in ${thingName}`)

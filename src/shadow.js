@@ -58,6 +58,16 @@ const addThing = (thingName,props) => {
 socket.on('disconnect', () => console.log("disconnected from socket"));
 
 export default {
+  getThings: ({success, error}) => {
+    socket.emit('getThings');
+    if(sockets.indexOf('things') === -1) {
+      sockets.push('things');
+      socket.on('things',success);
+      socket.on('things/error', error);
+    } else {
+      console.log("already listening to get things")
+    }
+  },
   getShadow: (thingName, props) => {
     addThing(thingName, props);
     console.log("thing was added",things)

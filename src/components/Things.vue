@@ -1,30 +1,38 @@
 <template>
   <div>
     <b-container fluid>
-      <div v-for="row in bRows" :key="row">
-        <br>
-        <b-card-group>
-          <BaseThing v-for="nav in baseNavs" :key="nav"/>
-        </b-card-group>
-      </div>
+      <br>
+      <b-button variant="info" @click.prevent="getThings()">Load things</b-button>
+      <br><br>
+      <b-card-group>
+        <BaseThing v-for="thing in things" v-bind:thing="thing" :key="nav"/>
+      </b-card-group>
     </b-container>
   </div>
 </template>
 
 <script>
+import shadow from '@/shadow';
 export default {
   data () {
     return {
-      baseNavs: new Array(3),
-      bRows: new Array(2)
+      things: [],
+      bRows: new Array(3)
     };
   },
+  created() {
+    this.getThings();
+  },
   methods: {
-    countDownChanged (dismissCountDown) {
-      this.dismissCountDown = dismissCountDown
-    },
-    showAlert () {
-      this.dismissCountDown = this.dismissSecs
+    getThings() {
+      shadow.getThings({
+        success: (data) => {
+          this.things = data.things
+          this.info("received things", {
+            timeout: 1000
+          });
+        }
+      });
     }
   }
 }

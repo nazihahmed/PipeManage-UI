@@ -30,6 +30,9 @@ export default {
       shadow: {}
     };
   },
+  created() {
+    this.getShadow();
+  },
   methods: {
     countDownChanged (dismissCountDown) {
       this.dismissCountDown = dismissCountDown
