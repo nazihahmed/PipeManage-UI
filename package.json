@@ -1,8 +1,7 @@
 {
-  "name": "vuejs-cookbook-test",
+  "name": "app-intel",
   "version": "1.0.0",
-  "description": "A Vue.js project",
-  "author": "Fabrizio Cucci",
+  "description": "App intel project",
   "private": true,
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --names \"BE,FE\" --prefix-colors blue,green \"nodemon app.js\" \"webpack-dev-server --inline --progress --config build/webpack.dev.conf.js\"",
