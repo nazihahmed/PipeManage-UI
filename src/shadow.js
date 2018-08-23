@@ -12,6 +12,8 @@ socket.on('things', data => {
   console.log("got things",data);
 });
 
+window.socket = socket;
+
 let sockets = [];
 let things = [];
 
@@ -64,6 +66,17 @@ export default {
       sockets.push('things');
       socket.on('things',success);
       socket.on('things/error', error);
+    } else {
+      console.log("already listening to get things")
+    }
+  },
+  getThing: ({thingName, success, error}) => {
+    socket.emit('getThing',thingName);
+    const path = `thing/${thingName}`;
+    if(sockets.indexOf(path) === -1) {
+      sockets.push(path);
+      socket.on(path,success);
+      socket.on(`${path}/error`, error);
     } else {
       console.log("already listening to get things")
     }

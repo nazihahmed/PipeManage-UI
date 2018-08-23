@@ -157,6 +157,32 @@ io.on('connection', socket => {
     });
   })
 
+  socket.on('getThing', (thingName) => {
+    iot.describeThing({thingName}, (err,data) => {
+      if(err) {
+        return socket.emit(`thing/${thingName}/error`);
+      }
+      socket.emit(`thing/${thingName}`, data);
+    });
+  })
+
+  socket.on('updateThingAlias', ({thingName, newThingAlias}) => {
+    var params = {
+      thingName: thingName, /* required */
+      attributePayload: {
+        attributes: {
+          'alias': newThingAlias,
+        },
+        merge: true
+      },
+      // expectedVersion: 0
+    };
+    iot.updateThing(params, function(err, data) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else     console.log("success",data);           // successful response
+    });
+  })
+
   socket.on('getShadow', async (thingName) => {
     console.log(`received interest in ${thingName}`)
     try {

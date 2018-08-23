@@ -1,10 +1,20 @@
+<style media="screen">
+  p {
+     word-wrap: break-word;
+  }
+</style>
 <template>
   <b-container fluid class="bv-example-row">
       <b-row>
           <b-col cols="5" class="text-left">
             <br>
-            <h2>Thing</h2>
-            <p>{{ $route.params.name }}</p>
+            <h2 v-if="thing">{{ thing.attributes.alias }}</h2>
+            <p v-if="thing"><strong>Name</strong>: {{thing.thingName}}</p>
+            <p v-if="thing"><strong>ARN</strong>: {{thing.thingArn}}</p>
+            <p v-if="thing && thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
+            <p v-if="thing && thing.attributes.country"><strong>Country</strong>: {{thing.attributes.country}}</p>
+            <p v-if="thing"><strong>ID</strong>: {{thing.thingId}}</p>
+            <p v-if="thing"><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
             <b-button-group vertical>
               <b-button variant="primary" @click.prevent="getShadow()">Get Shadow</b-button>
               <b-button variant="warning" @click.prevent="updateShadow()">Update Shadow</b-button>
@@ -27,21 +37,26 @@ import _ from 'lodash'
 export default {
   data () {
     return {
-      shadow: {}
+      shadow: {},
+      thing: {}
     };
   },
   created() {
+    this.name = this.$route.params.name;
     this.getShadow();
+    this.getThing();
   },
   methods: {
-    countDownChanged (dismissCountDown) {
-      this.dismissCountDown = dismissCountDown
-    },
-    showAlert () {
-      this.dismissCountDown = this.dismissSecs
+    getThing () {
+      this.thing = shadow.getThing({
+        thingName: this.name,
+        success: data => {
+          this.thing = data;
+          console.log("received thing details", data)
+        }
+      });
     },
     insertSample() {
-      console.log("inserting Sample")
       this.shadow = {
         "desired": {
           "welcome": "aws-iot"
@@ -52,23 +67,23 @@ export default {
       };
     },
     getShadow() {
-      shadow.getShadow(this.$route.params.name, {
+      shadow.getShadow(this.name, {
         getSuccess: shadow => {
           console.log("got shadow", shadow);
           this.shadow = shadow.state;
-          this.info('got shadow back', {
+          this.info('Received shadow', {
             timeout: 2000
           });
         },
         updateSuccess: shadow => {
-          this.shadow = shadow.state;
-          this.success('shadow was updated!', {
+          this.shadow = shadow;
+          this.success('Shadow was updated!', {
             timeout: 2000
           });
         },
         deleteSuccess: shadow => {
           this.shadow = {};
-          this.success('shadow was deleted!', {
+          this.success('Shadow was deleted!', {
             timeout: 2000
           });
         },
@@ -90,10 +105,10 @@ export default {
       });
     },
     updateShadow() {
-      shadow.updateShadow(this.$route.params.name,  _.cloneDeep(this.shadow));
+      shadow.updateShadow(this.name,  _.cloneDeep(this.shadow));
     },
     deleteShadow() {
-      shadow.deleteShadow(this.$route.params.name);
+      shadow.deleteShadow(this.name);
     }
   },
   components: {
