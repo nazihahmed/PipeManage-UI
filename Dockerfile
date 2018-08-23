@@ -1,7 +1,7 @@
 FROM node:8.11 AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install npm -g
+RUN npm install npm@6.0.1 -g
 RUN npm install
 COPY . .
 RUN npm run build
