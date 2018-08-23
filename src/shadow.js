@@ -18,29 +18,33 @@ let things = [];
 const isThingRegistered = (thingName) => things.find(thing => thing.thingName === thingName);
 
 const listenToSocket = (thingName, methods) => {
-  for (method of methods) {
+  for (let method of methods) {
     const successSocket = `things/${thingName}/shadow/${method}`;
     const failureSocket = `things/${thingName}/shadow/${method}/error`;
-    if(sockets.indexOf(socket)===-1) {
-      sockets.push(socket,failureSocket);
-      console.log("listening to ",topic);
+    if(sockets.indexOf(successSocket)===-1) {
+      sockets.push(successSocket);
+      let thing = isThingRegistered(thingName);
+      console.log("listening to ",successSocket,failureSocket);
       socket.on(successSocket, shadow => {
-        console.log(`received ${action} action`, shadow);
-        let thing = isThingRegistered(thingName);
-        if(thing && thing[`${method}Sucess`]) {
-          thing[`${method}Sucess`]();
+        console.log(`received ${method} action`, shadow);
+        if(thing && thing[`${method}Success`]) {
+          // prevent updating more than once for same version
+          if(method === 'update' && shadow.version === thing.version) {
+            return;
+          }
+          thing[`${method}Success`](shadow);
+          thing.version = shadow.version;
           if (method === 'delete') {
             things = things.filter(thing => thing.thingName !== thingName);
+            socket.off(successSocket);
+            socket.off(failureSocket);
           }
         }
       });
       socket.on(failureSocket, () => {
-        console.log(`received ${action} Error`, shadow);
+        console.log(`received ${method} Error`);
         if(thing && thing[`${method}Error`]) {
-          thing[`${method}Sucess`]();
-          if (method === 'delete') {
-            things = things.filter(thing => thing.thingName !== thingName);
-          }
+          thing[`${method}Error`]();
         }
       });
     }
@@ -59,14 +63,10 @@ const addThing = (thingName,props) => {
 socket.on('disconnect', () => console.log("disconnected from socket"));
 
 export default {
-  getShadow: thingName, props => {
+  getShadow: (thingName, props) => {
     addThing(thingName, props);
+    console.log("thing was added",things)
     listenToSocket(thingName,['get','update','delete']);
-    // listenToSocket(`things/${thingName}/shadow/update`);
-    // listenToSocket(`things/${thingName}/shadow/delete`);
-    // listenToSocket(`things/${thingName}/shadow/get/failed`,'failue to get');
-    // listenToSocket(`things/${thingName}/shadow/update/failed`,'failue to update');
-    // listenToSocket(`things/${thingName}/shadow/delete/failed`,'failue to delete');
     socket.emit('getShadow',thingName);
   },
   deleteShadow: thingName => {

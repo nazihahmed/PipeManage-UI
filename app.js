@@ -201,7 +201,7 @@ io.on('connection', socket => {
         }
         return io.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
       }
-      console.log("error to get shadow")
+      console.log("failed to get shadow")
       io.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
     }
   });
