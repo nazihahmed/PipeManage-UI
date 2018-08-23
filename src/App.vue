@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <BaseNav/>
     <router-view/>
   </div>
 </template>

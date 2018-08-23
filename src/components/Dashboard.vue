@@ -1,11 +1,10 @@
 <template>
   <div>
-    <BaseNav/>
     <b-container fluid>
-      <div v-for="row in bRows">
+      <div v-for="row in bRows" :key="row">
         <br>
         <b-card-group>
-          <!-- <BaseBlock v-for="nav in baseNavs"/> -->
+          <BaseBlock v-for="nav in baseNavs" :key="nav"/>
         </b-card-group>
       </div>
     </b-container>

@@ -164,7 +164,7 @@ io.on('connection', socket => {
       console.log("received registration token",registeredThings)
     } catch(err) {
       console.log("couldn't register interst in token",err);
-      io.emit(`things/${thingName}/shadow/get/failed`);
+      io.emit(`things/${thingName}/shadow/get/error`);
     }
   });
 
@@ -173,8 +173,8 @@ io.on('connection', socket => {
       await updateThingShadow(thingName, desired);
     } catch(err) {
       console.error(err);
-      console.log(`failed to update ${thingName} shadow`);
-      io.emit(`things/${thingName}/shadow/update/failed`);
+      console.log(`error to update ${thingName} shadow`);
+      io.emit(`things/${thingName}/shadow/update/error`);
     }
   });
 
@@ -183,8 +183,8 @@ io.on('connection', socket => {
       await deleteThingShadow(thingName);
     } catch(err) {
       console.error(err);
-      console.log(`failed to delete ${thingName} shadow`);
-      io.emit(`things/${thingName}/shadow/delete/failed`);
+      console.log(`error to delete ${thingName} shadow`);
+      io.emit(`things/${thingName}/shadow/delete/error`);
     }
   });
 
@@ -197,12 +197,12 @@ io.on('connection', socket => {
       if(stat === 'accepted') {
         if (thing.operation === 'delete') {
           thingShadows.unregister(thingName);
-          registeredThings = thingShadows.filter(thing => thing.thingName !== thingName);
+          registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
         }
         return io.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
       }
-      console.log("failed to get shadow")
-      io.emit(`things/${thing.thingName}/shadow/${thing.operation}/failed`);
+      console.log("error to get shadow")
+      io.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
     }
   });
 
@@ -227,8 +227,8 @@ io.on('connection', socket => {
     console.log("received timeout")
     if(thing) {
       thing.tokenVerified = true;
-      console.log(`things/${thingName}/shadow/${thing.operation}/failed`);
-      io.emit(`things/${thingName}/shadow/${thing.operation}/failed`);
+      console.log(`things/${thingName}/shadow/${thing.operation}/error`);
+      io.emit(`things/${thingName}/shadow/${thing.operation}/error`);
     }
   });
 

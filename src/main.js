@@ -6,7 +6,6 @@ import router from './router'
 import BootstrapVue from 'bootstrap-vue'
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
-import io from 'socket.io-client';
 
 // CSS
 import 'bootstrap/dist/css/bootstrap.css'
@@ -14,7 +13,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.use(BootstrapVue);
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 const requireComponent = require.context(
   // The relative path of the components folder
@@ -46,59 +45,6 @@ requireComponent.keys().forEach(fileName => {
     componentConfig.default || componentConfig
   )
 });
-
-const {hostname} = window.location;
-const port = hostname === 'localhost' ? ':3000' : '';
-const socket = io.connect(`http://${hostname}${port}`);
-
-socket.on('connect', () => {
-  console.log("connected to socket")
-});
-socket.on('things', data => {
-  console.log("got things",data);
-});
-
-let sockets = [];
-
-const listenToSocket = (topic, action) => {
-  if(sockets.indexOf(topic)===-1) {
-    sockets.push(topic);
-    console.log("listening to ",topic)
-    socket.on(topic, shadow => {
-      console.log(`received ${action} shadow`, shadow);
-    });
-  }
-}
-
-const getShadow = thingName => {
-  listenToSocket(`things/${thingName}/shadow/get`,'get');
-  listenToSocket(`things/${thingName}/shadow/update`,'update');
-  listenToSocket(`things/${thingName}/shadow/delete`,'delete');
-  listenToSocket(`things/${thingName}/shadow/get/failed`,'failue to get');
-  listenToSocket(`things/${thingName}/shadow/update/failed`,'failue to update');
-  listenToSocket(`things/${thingName}/shadow/delete/failed`,'failue to delete');
-  socket.emit('getShadow',thingName);
-}
-
-window.getShadow = getShadow;
-
-const deleteShadow = thingName => {
-  socket.emit('deleteShadow',thingName);
-}
-
-window.deleteShadow = deleteShadow;
-
-const updateShadow = (thingName, desired) => {
-  if(sockets.indexOf(`things/${thingName}/shadow/get`) === -1) {
-    throw new Error('thing must be registered, use getShadow first');
-  }
-  socket.emit('updateShadow',{thingName, desired});
-}
-
-window.updateShadow = updateShadow;
-
-socket.on('disconnect', () => console.log("disconnected from socket"));
-// window.socket = socket;
 
 /* eslint-disable no-new */
 new Vue({

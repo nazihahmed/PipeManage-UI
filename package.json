@@ -22,6 +22,7 @@
     "socket.io-client": "^2.1.1",
     "socket.io-redis": "^5.2.0",
     "vue": "^2.5.2",
+    "vue-flash-message": "^0.6.2",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {
