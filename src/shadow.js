@@ -34,11 +34,6 @@ const listenToSocket = (thingName, methods) => {
           }
           thing[`${method}Success`](shadow);
           thing.version = shadow.version;
-          if (method === 'delete') {
-            things = things.filter(thing => thing.thingName !== thingName);
-            socket.off(successSocket);
-            socket.off(failureSocket);
-          }
         }
       });
       socket.on(failureSocket, () => {
@@ -72,10 +67,11 @@ export default {
   deleteShadow: thingName => {
     socket.emit('deleteShadow',thingName);
   },
-  updateShadow: (thingName, desired) => {
-    if(isThingRegistered(thingName)) {
+  updateShadow: (thingName, shadow) => {
+    console.log("update to",thingName,things, shadow, isThingRegistered(thingName))
+    if(!isThingRegistered(thingName)) {
       throw new Error('thing must be registered, use getShadow first');
     }
-    socket.emit('updateShadow',{thingName, desired});
+    socket.emit('updateShadow',{thingName, shadow: {state: shadow}});
   }
 }

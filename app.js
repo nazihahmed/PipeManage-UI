@@ -131,16 +131,12 @@ const registerInterestInThing = (thingName) => {
   });
 };
 
-const updateThingShadow = async (thingName, desired) => {
+const updateThingShadow = async (thingName, shadow) => {
   let thing = getThingByName(thingName);
   thing.tokenVerified = false;
   thing.operation = 'update';
   console.log("upadting",thingName)
-  thing.token = await updateShadow(thing.thingName, {
-    state: {
-      desired
-    }
-  });
+  thing.token = await updateShadow(thing.thingName, shadow);
 };
 
 const deleteThingShadow = async (thingName) => {
@@ -168,9 +164,9 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('updateShadow', async ({thingName, desired}) => {
+  socket.on('updateShadow', async ({thingName, shadow}) => {
     try {
-      await updateThingShadow(thingName, desired);
+      await updateThingShadow(thingName, shadow);
     } catch(err) {
       console.error(err);
       console.log(`error to update ${thingName} shadow`);

@@ -6,12 +6,15 @@ import router from './router'
 import BootstrapVue from 'bootstrap-vue'
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
+import VueFlashMessage from 'vue-flash-message';
 
 // CSS
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+// import 'vue-flash-message/dist/vue-flash-message.min.css';
 
 Vue.use(BootstrapVue);
+Vue.use(VueFlashMessage);
 
 Vue.config.productionTip = false;
 
