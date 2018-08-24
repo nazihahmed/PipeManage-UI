@@ -16,12 +16,12 @@
             <p v-if="thing"><strong>ID</strong>: {{thing.thingId}}</p>
             <p v-if="thing"><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
             <b-button-group vertical>
-              <b-button variant="primary" @click.prevent="getShadow()">Get Shadow</b-button>
-              <b-button variant="warning" @click.prevent="updateShadow()">Update Shadow</b-button>
-              <b-button variant="danger" @click.prevent="deleteShadow()">Delete Shadow</b-button>
+              <b-button variant="primary" v-on:click="getShadow()">Get Shadow</b-button>
+              <b-button variant="warning" v-on:click="updateShadow()">Update Shadow</b-button>
+              <b-button variant="danger" v-on:click="deleteShadow()">Delete Shadow</b-button>
             </b-button-group>
             <br><br>
-            <b-button variant="info" @click.prevent="insertSample()">Insert Sample Data</b-button>
+            <b-button variant="info" v-on:click="insertSample()">Insert Sample Data</b-button>
           </b-col>
           <b-col cols="7">
             <br>
@@ -76,7 +76,7 @@ export default {
           });
         },
         updateSuccess: shadow => {
-          this.shadow = shadow;
+          this.shadow = shadow.state;
           this.success('Shadow was updated!', {
             timeout: 2000
           });

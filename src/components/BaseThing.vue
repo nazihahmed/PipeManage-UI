@@ -6,8 +6,7 @@
           <strong>Thing ARN:</strong> {{thing.thingArn}} <br>
           <strong v-if="thing.attributes.country">Country:</strong> {{thing.attributes.country}} <br>
       </p>
-      <a v-bind:href="'/thing/'+thing.thingName"
-         class="card-link">View thing</a>
+      <router-link :to="{ name: 'thing', params: { name: thing.thingName }}" class="card-link">View thing</router-link>
       <b-link href="#"
               class="card-link">Delete Thing</b-link>
   </b-card>
