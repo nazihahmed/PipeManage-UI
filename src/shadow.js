@@ -12,6 +12,7 @@ socket.on('things', data => {
   console.log("got things",data);
 });
 
+// TODO: remove when done testing
 window.socket = socket;
 
 let sockets = [];
