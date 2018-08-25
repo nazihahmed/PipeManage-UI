@@ -119,7 +119,6 @@ const iot = new AWS.Iot({apiVersion: '2015-05-28'});
 
 const initSocket = () => {
   io.on('connection', socket => {
-
     socket.on('getThings', () => {
       iot.listThings({}, (err,data) => {
         if(err) {
