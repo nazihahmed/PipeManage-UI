@@ -6,7 +6,7 @@ const cors = require('cors');
 const redis = require('socket.io-redis');
 
 /* COMMON utilities */
-require('./common/thingSocketApi');
+const thingSocket = require('./common/thingSocket');
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(cors());
@@ -26,7 +26,7 @@ const server = app.listen(port, function () {
     console.log('Server running at http://127.0.0.1:' + port + '/');
 });
 
-const io = require('socket.io').listen(server);
+thingSocket(server);
 
 if(process.env.REDIS_ENDPOINT) {
   io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
