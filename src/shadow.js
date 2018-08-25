@@ -50,7 +50,7 @@ const listenToSocket = (thingName, methods) => {
 }
 
 const addThing = (thingName,props) => {
-  if(things.indexOf(thingName) === -1) {
+  if(!isThingRegistered(thingName)) {
     things.push({
       thingName,
       ...props

@@ -13,9 +13,6 @@
 </template>
 <script>
 export default {
-  props: ["thing"],
-  mounted() {
-      console.log("component mounted")
-  }
+  props: ["thing"]
 }
 </script>
