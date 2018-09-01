@@ -16,6 +16,10 @@ app.use(
   express.static(__dirname + "/dist/static")
 );
 
+app.get('*', function(req, res){
+  res.sendFile(__dirname + '/dist/index.html');
+});
+
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/dist/index.html');
 });
