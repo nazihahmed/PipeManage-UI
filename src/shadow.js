@@ -82,6 +82,17 @@ export default {
       console.log("already listening to get things")
     }
   },
+  updateThing: ({thingName, success, error, attributes}) => {
+    socket.emit('updateThing',{thingName, attributes});
+    const path = `thing/${thingName}/update`;
+    if(sockets.indexOf(path) === -1) {
+      sockets.push(path);
+      socket.on(`${path}/success`,success);
+      socket.on(`${path}/error`, error);
+    } else {
+      console.log("already listening to get things")
+    }
+  },
   getShadow: (thingName, props) => {
     addThing(thingName, props);
     console.log("thing was added",things)

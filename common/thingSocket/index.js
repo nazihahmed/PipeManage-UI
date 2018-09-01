@@ -137,13 +137,11 @@ const initSocket = () => {
       });
     })
 
-    socket.on('updateThingAlias', ({thingName, newThingAlias}) => {
+    socket.on('updateThing', ({thingName, attributes}) => {
       var params = {
         thingName: thingName, /* required */
         attributePayload: {
-          attributes: {
-            'alias': newThingAlias,
-          },
+          attributes,
           merge: true
         },
         // expectedVersion: 0
@@ -151,6 +149,10 @@ const initSocket = () => {
       iot.updateThing(params, function(err, data) {
         if (err) console.log(err, err.stack); // an error occurred
         else     console.log("success",data);           // successful response
+        if(err) {
+          return socket.emit(`thing/${thingName}/update/error`);
+        }
+        socket.emit(`thing/${thingName}/update/success`, data);
       });
     })
 

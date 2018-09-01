@@ -8,20 +8,24 @@
       <b-row>
           <b-col cols="5" class="text-left">
             <br>
-            <h2 v-if="thing">{{ thing.attributes.alias }}</h2>
+            <input type="text" v-if="thing && edit" v-bind:value="thing.attributes.alias">
+            <h2 v-if="thing && !edit">{{ thing.attributes.alias }}</h2><a href="#" @click="switchEditMode()">{{edit ? "Cancel" : "Edit"}}</a>
             <p v-if="thing"><strong>Name</strong>: {{thing.thingName}}</p>
             <p v-if="thing"><strong>ARN</strong>: {{thing.thingArn}}</p>
             <p v-if="thing && thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
-            <p v-if="thing && thing.attributes.country"><strong>Country</strong>: {{thing.attributes.country}}</p>
+            <strong>Country</strong>:
+            <input type="text" v-if="thing && edit" v-bind:value="thing.attributes.country">
+            <p v-if="thing && thing.attributes.country && !edit">{{thing.attributes.country}}</p>
             <p v-if="thing"><strong>ID</strong>: {{thing.thingId}}</p>
             <p v-if="thing"><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
-            <b-button-group vertical>
-              <b-button variant="primary" v-on:click="getShadow()">Get Shadow</b-button>
-              <b-button variant="warning" v-on:click="updateShadow()">Update Shadow</b-button>
-              <b-button variant="danger" v-on:click="deleteShadow()">Delete Shadow</b-button>
+            <b-button-group vertical v-if="!edit">
+              <b-button variant="primary" @click="getShadow()">Get Shadow</b-button>
+              <b-button variant="warning" @click="updateShadow()">Update Shadow</b-button>
+              <b-button variant="danger" @click="deleteShadow()">Delete Shadow</b-button>
             </b-button-group>
             <br><br>
-            <b-button variant="info" v-on:click="insertSample()">Insert Sample Data</b-button>
+            <b-button variant="info" @click="insertSample()" v-if="!edit">Insert Sample Data</b-button>
+            <b-button variant="info" @click="saveChanges()" v-if="edit">Save Changes</b-button>
           </b-col>
           <b-col cols="7">
             <br>
@@ -38,7 +42,8 @@ export default {
   data () {
     return {
       shadow: {},
-      thing: {}
+      thing: {},
+      edit: false
     };
   },
   created() {
@@ -47,7 +52,15 @@ export default {
     this.getThing();
   },
   methods: {
-    getThing () {
+    switchEditMode() {
+      if(this.edit) {
+        // was in edit and canceling
+        return this.getThing();
+      }
+      this.edit = !this.edit;
+    },
+    getThing() {
+      this.edit = false;
       this.thing = shadow.getThing({
         thingName: this.name,
         success: data => {
@@ -107,7 +120,7 @@ export default {
       });
     },
     updateShadow() {
-      shadow.updateShadow(this.name,  _.cloneDeep(this.shadow));
+      shadow.updateShadow(this.name,  _.cloneDeep(_.pick(this.shadow,"state")));
     },
     deleteShadow() {
       shadow.deleteShadow(this.name);
