@@ -58,11 +58,13 @@ export default {
     },
     insertSample() {
       this.shadow = {
-        "desired": {
-          "welcome": "aws-iot"
-        },
-        "reported": {
-          "welcome": "aws-iot"
+        "state": {
+          "desired": {
+            "welcome": "aws-iot"
+          },
+          "reported": {
+            "welcome": "aws-iot"
+          }
         }
       };
     },
