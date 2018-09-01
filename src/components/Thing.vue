@@ -8,13 +8,13 @@
       <b-row>
           <b-col cols="5" class="text-left">
             <br>
-            <input type="text" v-if="thing && edit" v-bind:value="thing.attributes.alias">
+            <input type="text" v-model="newAlias" v-if="thing && edit">
             <h2 v-if="thing && !edit">{{ thing.attributes.alias }}</h2><a href="#" @click="switchEditMode()">{{edit ? "Cancel" : "Edit"}}</a>
             <p v-if="thing"><strong>Name</strong>: {{thing.thingName}}</p>
             <p v-if="thing"><strong>ARN</strong>: {{thing.thingArn}}</p>
             <p v-if="thing && thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
             <strong>Country</strong>:
-            <input type="text" v-if="thing && edit" v-bind:value="thing.attributes.country">
+            <input type="text" v-model="newCountry" v-if="thing && edit">
             <p v-if="thing && thing.attributes.country && !edit">{{thing.attributes.country}}</p>
             <p v-if="thing"><strong>ID</strong>: {{thing.thingId}}</p>
             <p v-if="thing"><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
@@ -25,7 +25,7 @@
             </b-button-group>
             <br><br>
             <b-button variant="info" @click="insertSample()" v-if="!edit">Insert Sample Data</b-button>
-            <b-button variant="info" @click="saveChanges()" v-if="edit">Save Changes</b-button>
+            <b-button variant="info" @click="saveChanges()" v-if="edit">{{updating ? "Updating...":"Save Changes"}}</b-button>
           </b-col>
           <b-col cols="7">
             <br>
@@ -43,7 +43,10 @@ export default {
     return {
       shadow: {},
       thing: {},
-      edit: false
+      edit: false,
+      updating: false,
+      newCountry: "",
+      newAlias: ""
     };
   },
   created() {
@@ -59,12 +62,40 @@ export default {
       }
       this.edit = !this.edit;
     },
+    saveChanges() {
+      this.updating = true;
+      shadow.updateThing({
+        thingName: this.name,
+        attributes: {
+          country: this.newCountry,
+          alias: this.newAlias
+        },
+        success: data => {
+          this.updating = false;
+          this.edit = false;
+          this.getThing();
+          // this.thing = data;
+          console.log("updated thing details", data)
+          this.info('Updated thing', {
+            timeout: 2000
+          });
+        },
+        error: () => {
+          this.updating = false;
+          this.error('Failed to update thing', {
+            timeout: 2000
+          });
+        }
+      });
+    },
     getThing() {
       this.edit = false;
       this.thing = shadow.getThing({
         thingName: this.name,
         success: data => {
           this.thing = data;
+          this.newCountry = this.thing.attributes.country;
+          this.newAlias = this.thing.attributes.alias;
           console.log("received thing details", data)
         }
       });

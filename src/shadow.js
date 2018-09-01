@@ -85,9 +85,10 @@ export default {
   updateThing: ({thingName, success, error, attributes}) => {
     socket.emit('updateThing',{thingName, attributes});
     const path = `thing/${thingName}/update`;
+    console.log("updating with",attributes)
     if(sockets.indexOf(path) === -1) {
       sockets.push(path);
-      socket.on(`${path}/success`,success);
+      socket.on(`${path}`,success);
       socket.on(`${path}/error`, error);
     } else {
       console.log("already listening to get things")
