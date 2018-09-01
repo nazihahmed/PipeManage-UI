@@ -5,19 +5,19 @@
 </style>
 <template>
   <b-container fluid class="bv-example-row">
-      <b-row>
+      <b-row v-if="thing">
           <b-col cols="5" class="text-left">
             <br>
-            <input type="text" v-model="newAlias" v-if="thing && edit">
-            <h2 v-if="thing && !edit">{{ thing.attributes.alias }}</h2><a href="#" @click="switchEditMode()">{{edit ? "Cancel" : "Edit"}}</a>
-            <p v-if="thing"><strong>Name</strong>: {{thing.thingName}}</p>
-            <p v-if="thing"><strong>ARN</strong>: {{thing.thingArn}}</p>
-            <p v-if="thing && thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
-            <strong>Country</strong>:
+            <input type="text" v-model="newAlias" v-if="edit">
+            <h2 v-if="!edit">{{ thing.attributes.alias }}</h2><a href="#" @click="switchEditMode()" v-if="thing">{{edit ? "Cancel" : "Edit"}}</a>
+            <p><strong>Name</strong>: {{thing.thingName}}</p>
+            <p><strong>ARN</strong>: {{thing.thingArn}}</p>
+            <p v-if="thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
+            <strong v-if="thing">Country:</strong>
             <input type="text" v-model="newCountry" v-if="thing && edit">
-            <p v-if="thing && thing.attributes.country && !edit">{{thing.attributes.country}}</p>
-            <p v-if="thing"><strong>ID</strong>: {{thing.thingId}}</p>
-            <p v-if="thing"><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
+            <p v-if="thing.attributes.country && !edit">{{thing.attributes.country}}</p>
+            <p><strong>ID</strong>: {{thing.thingId}}</p>
+            <p><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
             <b-button-group vertical v-if="!edit">
               <b-button variant="primary" @click="getShadow()">Get Shadow</b-button>
               <b-button variant="warning" @click="updateShadow()">Update Shadow</b-button>
