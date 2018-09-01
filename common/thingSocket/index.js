@@ -195,7 +195,7 @@ const initSocket = () => {
             thingShadows.unregister(thingName);
             registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
           }
-          return io.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
+          return socket.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
         }
         console.log("failed to get shadow")
         socket.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
