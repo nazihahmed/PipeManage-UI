@@ -96,6 +96,6 @@ export default {
     if(!isThingRegistered(thingName)) {
       throw new Error('thing must be registered, use getShadow first');
     }
-    socket.emit('updateShadow',{thingName, shadow: {state: shadow}});
+    socket.emit('updateShadow',{thingName, shadow});
   }
 }

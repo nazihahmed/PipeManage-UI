@@ -70,13 +70,13 @@ export default {
       shadow.getShadow(this.name, {
         getSuccess: shadow => {
           console.log("got shadow", shadow);
-          this.shadow = shadow.state;
+          this.shadow = shadow;
           this.info('Received shadow', {
             timeout: 2000
           });
         },
         updateSuccess: shadow => {
-          this.shadow = shadow.state;
+          this.shadow = shadow;
           this.success('Shadow was updated!', {
             timeout: 2000
           });
