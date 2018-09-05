@@ -32,10 +32,13 @@ const listenToForeignSocket = (thingName, methods) => {
         if(thing && thing[`${method}Fn`]) {
           // prevent updating more than once for same version
           console.log("before updating check version", shadow, thing);
-          if(method === 'delete') {
-            thing[`${method}Fn`](true);
+          if(method === 'delete' && !thing.localDelete) {
+            return thing[`${method}Fn`](true);
           }
-          if(method === 'update' && shadow.version === thing.version) {
+          if((method === 'update' && shadow.version === thing.version) ||
+            (method === 'update' && thing.localUpdate) ||
+            (method === 'delete' && thing.localDelete)
+          ) {
             return;
           }
           thing[`${method}Fn`](shadow);
@@ -52,7 +55,9 @@ const addThing = (thingName, props) => {
   if(!isThingRegistered(thingName)) {
     things.push({
       thingName,
-      ...props
+      ...props,
+      localDelete: false,
+      localUpdate: false
     });
   }
 }
@@ -84,7 +89,7 @@ export default {
       success(data);
     });
     const path = `thing/${thingName}/update`;
-    console.log("foreign update ",attributes)
+    console.log("foreign update",attributes)
     if(sockets.indexOf(path) === -1) {
       sockets.push(path);
       socket.on(`${path}`,success);
@@ -105,7 +110,12 @@ export default {
   },
   deleteShadow: thingName => {
     let thing = isThingRegistered(thingName);
-    socket.emit('deleteShadow',thingName, thing.deleteFn);
+    thing.localDelete = true;
+    socket.emit('deleteShadow',thingName, (data) => {
+      thing.deleteFn(data);
+      thing.localDelete = false;
+    });
+
   },
   updateShadow: (thingName, shadow) => {
     let thing = isThingRegistered(thingName);
@@ -115,12 +125,14 @@ export default {
       throw new Error('thing must be registered, use getShadow first');
     }
     console.log("add updateFn to",thing);
+    thing.localUpdate = true;
     socket.emit('updateShadow',{thingName, shadow}, (data) => {
       if(!data) {
         thing.version--;
       }
-      console.log("new version is",thing)
+      console.log("new version is",thing);
       thing.updateFn(data);
+      thing.localUpdate = false;
     });
   }
 }
