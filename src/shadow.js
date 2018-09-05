@@ -36,8 +36,8 @@ const listenToForeignSocket = (thingName, methods) => {
             return thing[`${method}Fn`](true);
           }
           if((method === 'update' && shadow.version === thing.version) ||
-            (method === 'update' && thing.localUpdate) ||
-            (method === 'delete' && thing.localDelete)
+             (method === 'update' && thing.localUpdate) ||
+             (method === 'delete' && thing.localDelete)
           ) {
             return;
           }
@@ -82,17 +82,25 @@ export default {
     });
   },
   updateThing: ({thingName, success, error, attributes}) => {
+    let thing = isThingRegistered(thingName);
+    const path = `thing/${thingName}/update`;
+    thing.localThingUpdate = true;
     socket.emit('updateThing',{thingName, attributes}, data => {
+      thing.localThingUpdate = false;
       if(!data) {
         error();
       }
       success(data);
     });
-    const path = `thing/${thingName}/update`;
     console.log("foreign update",attributes)
     if(sockets.indexOf(path) === -1) {
       sockets.push(path);
-      socket.on(`${path}`,success);
+      socket.on(`${path}`,(data) => {
+        if(!data || thing.localThingUpdate) {
+          return;
+        }
+        success(data);
+      });
     } else {
       console.log("already listening to get things")
     }
