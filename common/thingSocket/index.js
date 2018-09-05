@@ -213,6 +213,9 @@ const initSocket = () => {
             thingShadows.unregister(thingName);
             registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
           }
+          if(thing.operation === 'update') {
+            io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+          }
           thing.fn(stateObject);
           // return socket.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
         }
