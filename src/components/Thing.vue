@@ -114,40 +114,39 @@ export default {
     },
     getShadow() {
       shadow.getShadow(this.name, {
-        getSuccess: shadow => {
-          console.log("got shadow", shadow);
-          this.shadow = shadow;
-          this.info('Received shadow', {
-            timeout: 2000
-          });
-        },
-        updateSuccess: shadow => {
+        updateFn: shadow => {
+          if(!shadow) {
+            return this.error('Failed to update shadow', {
+              timeout: 2000
+            });
+          }
           this.shadow = shadow;
           this.success('Shadow was updated!', {
             timeout: 2000
           });
         },
-        deleteSuccess: shadow => {
+        deleteFn: res => {
+          if(!res) {
+            return this.error('Failed to delete shadow', {
+              timeout: 2000
+            });
+          }
           this.shadow = {};
           this.success('Shadow was deleted!', {
             timeout: 2000
           });
-        },
-        deleteError: () => {
-          this.error('Failed to delete shadow', {
-            timeout: 2000
-          });
-        },
-        updateError: () => {
-          this.error('Failed to update shadow', {
-            timeout: 2000
-          });
-        },
-        getError: () => {
-          this.error('No shadow was found, update first', {
+        }
+      }, shadow => {
+        if(!shadow) {
+          return this.error('No shadow was found, update first', {
             timeout: 2000
           });
         }
+        console.log("got shadow", shadow);
+        this.shadow = shadow;
+        this.info('Received shadow', {
+          timeout: 2000
+        });
       });
     },
     updateShadow() {

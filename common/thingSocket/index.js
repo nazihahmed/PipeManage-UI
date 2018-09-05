@@ -66,7 +66,7 @@ const getThingByName = (name, tokenNotVerified) => {
   return tokenNotVerfiedFilter(things, tokenNotVerified);
 };
 
-const registerInterestInThing = (thingName) => {
+const registerInterestInThing = (thingName, fn) => {
   return new Promise(async (resolve,reject) => {
     try {
       let thing = getThingByName(thingName);
@@ -75,69 +75,83 @@ const registerInterestInThing = (thingName) => {
           const token = await getShadow(thingName);
           if (token === null) {
             reject();
+            return fn(false);
           }
           registeredThings.push({
             thingName,
             token,
+            fn,
             tokenVerified: false,
             operation: 'get'
           });
+          // fn(true);
           resolve();
         });
       } else {
         const token = await getShadow(thingName);
         if (token === null) {
           reject();
+          return fn(false);
         }
         thing.token = token;
         thing.tokenVerified = false;
         thing.operation = 'get';
+        thing.fn = fn;
+        // fn(true);
         resolve();
       }
     } catch (err) {
       reject();
+      fn(false);
     }
   });
 };
 
-const updateThingShadow = async (thingName, shadow) => {
+const updateThingShadow = async (thingName, shadow, fn) => {
   let thing = getThingByName(thingName);
   thing.tokenVerified = false;
   thing.operation = 'update';
-  console.log("upadting",thingName)
+  console.log("upadting",thingName);
   thing.token = await updateShadow(thing.thingName, shadow);
+  thing.fn = fn;
 };
 
-const deleteThingShadow = async (thingName) => {
+const deleteThingShadow = async (thingName, fn) => {
   let thing = getThingByName(thingName);
   thing.tokenVerified = false;
   thing.operation = 'delete';
   thing.token = await deleteShadow(thing.thingName);
+  thing.fn = fn;
 };
 
 const iot = new AWS.Iot({apiVersion: '2015-05-28'});
-
+let clients = [];
 const initSocket = () => {
   io.on('connection', socket => {
-    socket.on('getThings', () => {
+    clients.push(socket);
+    socket.on('getThings', fn => {
       iot.listThings({}, (err,data) => {
         if(err) {
-          return socket.emit('things/error');
+          fn(false);
+          // return socket.emit('things/error');
         }
-        socket.emit('things', data);
+        fn(data);
+        // socket.emit('things', data);
       });
     })
 
-    socket.on('getThing', (thingName) => {
+    socket.on('getThing', (thingName, fn) => {
       iot.describeThing({thingName}, (err,data) => {
         if(err) {
-          return socket.emit(`thing/${thingName}/error`);
+          fn(false);
+          // return socket.emit(`thing/${thingName}/error`);
         }
-        socket.emit(`thing/${thingName}`, data);
+        fn(data);
+        // socket.emit(`thing/${thingName}`, data);
       });
     })
 
-    socket.on('updateThing', ({thingName, attributes}) => {
+    socket.on('updateThing', ({thingName, attributes}, fn) => {
       var params = {
         thingName,
         attributePayload: {
@@ -147,40 +161,43 @@ const initSocket = () => {
       };
       iot.updateThing(params, function(err, data) {
         if(err) {
-          return socket.emit(`thing/${thingName}/update/error`);
+          fn(false);
         }
+        fn(data);
         io.emit(`thing/${thingName}/update`, data);
       });
     })
 
-    socket.on('getShadow', async (thingName) => {
+    socket.on('getShadow', async (thingName, fn) => {
       console.log(`received interest in ${thingName}`)
       try {
-        await registerInterestInThing(thingName);
+        await registerInterestInThing(thingName, fn);
         console.log("received registration token",registeredThings)
       } catch(err) {
         console.log("couldn't register interst in token",err);
-        socket.emit(`things/${thingName}/shadow/get/error`);
+        fn(false);
+        // socket.emit(`things/${thingName}/shadow/get/error`);
       }
     });
 
-    socket.on('updateShadow', async ({thingName, shadow}) => {
+    socket.on('updateShadow', async ({thingName, shadow}, fn) => {
       try {
-        await updateThingShadow(thingName, shadow);
+        await updateThingShadow(thingName, shadow, fn);
       } catch(err) {
         console.error(err);
         console.log(`error to update ${thingName} shadow`);
-        socket.emit(`things/${thingName}/shadow/update/error`);
+        fn(false);
+        // socket.emit(`things/${thingName}/shadow/update/error`);
       }
     });
 
-    socket.on('deleteShadow', async (thingName) => {
+    socket.on('deleteShadow', async (thingName, fn) => {
       try {
-        await deleteThingShadow(thingName);
+        await deleteThingShadow(thingName, fn);
       } catch(err) {
         console.error(err);
-        console.log(`error to delete ${thingName} shadow`);
-        socket.emit(`things/${thingName}/shadow/delete/error`);
+        console.log(`failed to delete ${thingName} shadow`);
+        fn(false);
       }
     });
 
@@ -192,13 +209,16 @@ const initSocket = () => {
         thing.tokenVerified = true;
         if(stat === 'accepted') {
           if (thing.operation === 'delete') {
+            io.emit(`things/${thing.thingName}/shadow/delete`);
             thingShadows.unregister(thingName);
             registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
           }
-          return socket.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
+          thing.fn(stateObject);
+          // return socket.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
         }
         console.log("failed to get shadow")
-        socket.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
+        thing.fn(false);
+        // socket.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
       }
     });
 
@@ -208,12 +228,15 @@ const initSocket = () => {
       console.log("received delta", thingName, stateObject)
       if(thing && stateObject && thing.operation === 'update') {
         thing.tokenVerified = true;
+        console.log("emittting to all others", `things/${thing.thingName}/shadow/update`)
         io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+        thing.fn(stateObject);
       }
     });
 
     // any change due to someone else changing it from the outside
     thingShadows.on('foreignStateChange', (thingName, operation, stateObject) => {
+      console.log('------------foreignSTATECHANGE');
       io.emit(`things/${thingName}/shadow/${operation}`,stateObject);
     });
 
@@ -224,7 +247,8 @@ const initSocket = () => {
       if(thing) {
         thing.tokenVerified = true;
         console.log(`things/${thingName}/shadow/${thing.operation}/error`);
-        socket.emit(`things/${thingName}/shadow/${thing.operation}/error`);
+        thing.fn(false);
+        // socket.emit(`things/${thingName}/shadow/${thing.operation}/error`);
       }
     });
 

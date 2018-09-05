@@ -20,36 +20,35 @@ let things = [];
 
 const isThingRegistered = (thingName) => things.find(thing => thing.thingName === thingName);
 
-const listenToSocket = (thingName, methods) => {
+const listenToForeignSocket = (thingName, methods) => {
   for (let method of methods) {
     const successSocket = `things/${thingName}/shadow/${method}`;
-    const failureSocket = `things/${thingName}/shadow/${method}/error`;
     if(sockets.indexOf(successSocket)===-1) {
       sockets.push(successSocket);
       let thing = isThingRegistered(thingName);
-      console.log("listening to ",successSocket,failureSocket);
+      console.log("listen to socket",successSocket, thing);
       socket.on(successSocket, shadow => {
-        console.log(`received ${method} action`, shadow);
-        if(thing && thing[`${method}Success`]) {
+        console.log(`received ${method} action`, shadow, thing);
+        if(thing && thing[`${method}Fn`]) {
           // prevent updating more than once for same version
+          console.log("before updating check version", shadow, thing);
+          if(method === 'delete') {
+            thing[`${method}Fn`](true);
+          }
           if(method === 'update' && shadow.version === thing.version) {
             return;
           }
-          thing[`${method}Success`](shadow);
-          thing.version = shadow.version;
-        }
-      });
-      socket.on(failureSocket, () => {
-        console.log(`received ${method} Error`);
-        if(thing && thing[`${method}Error`]) {
-          thing[`${method}Error`]();
+          thing[`${method}Fn`](shadow);
+          if(shadow) {
+            thing.version = shadow.version;
+          }
         }
       });
     }
   }
 }
 
-const addThing = (thingName,props) => {
+const addThing = (thingName, props) => {
   if(!isThingRegistered(thingName)) {
     things.push({
       thingName,
@@ -62,52 +61,66 @@ socket.on('disconnect', () => console.log("disconnected from socket"));
 
 export default {
   getThings: ({success, error}) => {
-    socket.emit('getThings');
-    if(sockets.indexOf('things') === -1) {
-      sockets.push('things');
-      socket.on('things',success);
-      socket.on('things/error', error);
-    } else {
-      console.log("already listening to get things")
-    }
+    socket.emit('getThings', data => {
+      if(!data) {
+        error();
+      }
+      success(data);
+    });
   },
   getThing: ({thingName, success, error}) => {
-    socket.emit('getThing',thingName);
-    const path = `thing/${thingName}`;
-    if(sockets.indexOf(path) === -1) {
-      sockets.push(path);
-      socket.on(path,success);
-      socket.on(`${path}/error`, error);
-    } else {
-      console.log("already listening to get things")
-    }
+    socket.emit('getThing',thingName, data => {
+      if(!data) {
+        error();
+      }
+      success(data);
+    });
   },
   updateThing: ({thingName, success, error, attributes}) => {
-    socket.emit('updateThing',{thingName, attributes});
+    socket.emit('updateThing',{thingName, attributes}, data => {
+      if(!data) {
+        error();
+      }
+      success(data);
+    });
     const path = `thing/${thingName}/update`;
-    console.log("updating with",attributes)
+    console.log("foreign update ",attributes)
     if(sockets.indexOf(path) === -1) {
       sockets.push(path);
       socket.on(`${path}`,success);
-      socket.on(`${path}/error`, error);
     } else {
       console.log("already listening to get things")
     }
   },
-  getShadow: (thingName, props) => {
+  getShadow: (thingName, props, fn) => {
     addThing(thingName, props);
-    console.log("thing was added",things)
-    listenToSocket(thingName,['get','update','delete']);
-    socket.emit('getShadow',thingName);
+    console.log("thing was added",things);
+    // foreign sockets
+    listenToForeignSocket(thingName,['update','delete']);
+    socket.emit('getShadow',thingName, (data) => {
+      let thing = isThingRegistered(thingName);
+      thing.version = data.version;
+      fn(data);
+    });
   },
   deleteShadow: thingName => {
-    socket.emit('deleteShadow',thingName);
+    let thing = isThingRegistered(thingName);
+    socket.emit('deleteShadow',thingName, thing.deleteFn);
   },
   updateShadow: (thingName, shadow) => {
-    console.log("update to",thingName,things, shadow, isThingRegistered(thingName))
-    if(!isThingRegistered(thingName)) {
+    let thing = isThingRegistered(thingName);
+    thing.version++;
+    console.log("update to",thingName,things, shadow, thing);
+    if(!thing) {
       throw new Error('thing must be registered, use getShadow first');
     }
-    socket.emit('updateShadow',{thingName, shadow});
+    console.log("add updateFn to",thing);
+    socket.emit('updateShadow',{thingName, shadow}, (data) => {
+      if(!data) {
+        thing.version--;
+      }
+      console.log("new version is",thing)
+      thing.updateFn(data);
+    });
   }
 }
