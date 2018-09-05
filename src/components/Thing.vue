@@ -69,22 +69,6 @@ export default {
         attributes: {
           country: this.newCountry,
           alias: this.newAlias
-        },
-        success: data => {
-          this.updating = false;
-          this.edit = false;
-          this.getThing();
-          // this.thing = data;
-          console.log("updated thing details", data)
-          this.info('Updated thing', {
-            timeout: 2000
-          });
-        },
-        error: () => {
-          this.updating = false;
-          this.error('Failed to update thing', {
-            timeout: 2000
-          });
         }
       });
     },
@@ -133,6 +117,21 @@ export default {
           }
           this.shadow = {};
           this.success('Shadow was deleted!', {
+            timeout: 2000
+          });
+        },
+        updateThingFn: data => {
+          this.updating = false;
+          this.edit = false;
+          if(!data) {
+            return this.error('Failed to update thing', {
+              timeout: 2000
+            });
+          }
+          this.getThing();
+          // this.thing = data;
+          console.log("updated thing details", data)
+          this.info('Updated thing', {
             timeout: 2000
           });
         }

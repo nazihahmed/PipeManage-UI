@@ -51,13 +51,31 @@ const listenToForeignSocket = (thingName, methods) => {
   }
 }
 
-const addThing = (thingName, props) => {
+const initThing = (thingName, props) => {
   if(!isThingRegistered(thingName)) {
     things.push({
       thingName,
       ...props,
       localDelete: false,
       localUpdate: false
+    });
+  }
+  let thing = isThingRegistered(thingName);
+  if(!thing) {
+    return;
+  }
+  const path = `thing/${thingName}/update`;
+  if(sockets.indexOf(path) === -1) {
+    sockets.push(path);
+    socket.on(`${path}`,(data) => {
+      console.log("check for localUpdate",thing.localThingUpdate)
+      if(thing.localThingUpdate) {
+        return thing.localThingUpdate = false;
+      }
+      if(!data) {
+        return;
+      }
+      thing.updateThingFn(data);
     });
   }
 }
@@ -81,32 +99,18 @@ export default {
       success(data);
     });
   },
-  updateThing: ({thingName, success, error, attributes}) => {
+  updateThing: ({thingName, attributes}) => {
     let thing = isThingRegistered(thingName);
-    const path = `thing/${thingName}/update`;
     thing.localThingUpdate = true;
     socket.emit('updateThing',{thingName, attributes}, data => {
-      thing.localThingUpdate = false;
       if(!data) {
-        error();
+        thing.updateThingFn(false);
       }
-      success(data);
+      thing.updateThingFn(data);
     });
-    console.log("foreign update",attributes)
-    if(sockets.indexOf(path) === -1) {
-      sockets.push(path);
-      socket.on(`${path}`,(data) => {
-        if(!data || thing.localThingUpdate) {
-          return;
-        }
-        success(data);
-      });
-    } else {
-      console.log("already listening to get things")
-    }
   },
   getShadow: (thingName, props, fn) => {
-    addThing(thingName, props);
+    initThing(thingName, props);
     console.log("thing was added",things);
     // foreign sockets
     listenToForeignSocket(thingName,['update','delete']);
@@ -123,7 +127,6 @@ export default {
       thing.deleteFn(data);
       thing.localDelete = false;
     });
-
   },
   updateShadow: (thingName, shadow) => {
     let thing = isThingRegistered(thingName);
