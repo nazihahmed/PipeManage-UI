@@ -8,14 +8,32 @@
       <b-row v-if="thing">
           <b-col cols="5" class="text-left">
             <br>
-            <input type="text" v-model="newAlias" v-if="edit">
-            <h2 v-if="!edit">{{ thing.attributes.alias }}</h2><a href="#" @click="switchEditMode()" v-if="thing">{{edit ? "Cancel" : "Edit"}}</a>
+            <h2 v-if="!edit">{{ thing.attributes.alias }}</h2>
+            <a href="#" @click="switchEditMode()" v-if="thing">{{edit ? "Cancel" : "Edit"}}</a>
+            <b-form-group label="Alias:"
+                          v-if="edit"
+                          label-for="aliasInput">
+              <b-form-input id="aliasInput"
+                            type="text"
+                            v-model="newAlias"
+                            required
+                            placeholder="Enter new alias">
+              </b-form-input>
+            </b-form-group>
             <p><strong>Name</strong>: {{thing.thingName}}</p>
             <p><strong>ARN</strong>: {{thing.thingArn}}</p>
             <p v-if="thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
-            <strong v-if="thing">Country:</strong>
-            <input type="text" v-model="newCountry" v-if="thing && edit">
-            <p v-if="thing.attributes.country && !edit">{{thing.attributes.country}}</p>
+            <b-form-group label="Country:"
+                          v-if="thing && edit"
+                          label-for="countryInput">
+              <b-form-input id="countryInput"
+                            type="text"
+                            v-model="newCountry"
+                            required
+                            placeholder="Enter new alias">
+              </b-form-input>
+            </b-form-group>
+            <p v-if="thing.attributes.country && !edit"><strong v-if="thing">Country:</strong>{{thing.attributes.country}}</p>
             <p><strong>ID</strong>: {{thing.thingId}}</p>
             <p><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
             <b-button-group vertical v-if="!edit">
