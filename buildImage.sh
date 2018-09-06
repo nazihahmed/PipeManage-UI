@@ -8,4 +8,5 @@ docker build -t 925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHO
 aws ecr get-login --no-include-email | bash &&
 docker push 925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHORT} &&
 echo 'image pushed to registry, image url :' &&
-echo "${green}925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHORT}${reset}"
+echo "${green}925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHORT}${reset}" ||
+echo "${red}failed to push image to registry${reset}"
