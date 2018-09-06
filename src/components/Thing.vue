@@ -114,7 +114,7 @@ export default {
         }
       };
     },
-    getShadow() {
+    getShadow(hideAlert) {
       shadow.getShadow(this.name, {
         updateFn: shadow => {
           if(!shadow) {
@@ -122,10 +122,10 @@ export default {
               timeout: 2000
             });
           }
-          this.shadow = shadow;
           this.success('Shadow was updated!', {
             timeout: 2000
           });
+          this.getShadow(true);
         },
         deleteFn: res => {
           if(!res) {
@@ -147,7 +147,6 @@ export default {
             });
           }
           this.getThing();
-          // this.thing = data;
           console.log("updated thing details", data)
           this.info('Updated thing', {
             timeout: 2000
@@ -161,9 +160,11 @@ export default {
         }
         console.log("got shadow", shadow);
         this.shadow = shadow;
-        this.info('Received shadow', {
-          timeout: 2000
-        });
+        if(!hideAlert) {
+          this.info('Received shadow', {
+            timeout: 2000
+          });
+        }
       });
     },
     updateShadow() {

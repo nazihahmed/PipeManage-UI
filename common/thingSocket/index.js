@@ -84,7 +84,6 @@ const registerInterestInThing = (thingName, fn) => {
             tokenVerified: false,
             operation: 'get'
           });
-          // fn(true);
           resolve();
         });
       } else {
@@ -97,7 +96,6 @@ const registerInterestInThing = (thingName, fn) => {
         thing.tokenVerified = false;
         thing.operation = 'get';
         thing.fn = fn;
-        // fn(true);
         resolve();
       }
     } catch (err) {
@@ -133,10 +131,8 @@ const initSocket = () => {
       iot.listThings({}, (err,data) => {
         if(err) {
           fn(false);
-          // return socket.emit('things/error');
         }
         fn(data);
-        // socket.emit('things', data);
       });
     })
 
@@ -144,10 +140,8 @@ const initSocket = () => {
       iot.describeThing({thingName}, (err,data) => {
         if(err) {
           fn(false);
-          // return socket.emit(`thing/${thingName}/error`);
         }
         fn(data);
-        // socket.emit(`thing/${thingName}`, data);
       });
     })
 
@@ -176,7 +170,6 @@ const initSocket = () => {
       } catch(err) {
         console.log("couldn't register interst in token",err);
         fn(false);
-        // socket.emit(`things/${thingName}/shadow/get/error`);
       }
     });
 
@@ -187,7 +180,6 @@ const initSocket = () => {
         console.error(err);
         console.log(`error to update ${thingName} shadow`);
         fn(false);
-        // socket.emit(`things/${thingName}/shadow/update/error`);
       }
     });
 
@@ -217,11 +209,9 @@ const initSocket = () => {
             io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
           }
           thing.fn(stateObject);
-          // return socket.emit(`things/${thing.thingName}/shadow/${thing.operation}`,stateObject);
         }
         console.log("failed to get shadow")
         thing.fn(false);
-        // socket.emit(`things/${thing.thingName}/shadow/${thing.operation}/error`);
       }
     });
 
@@ -249,9 +239,7 @@ const initSocket = () => {
       console.log("received timeout")
       if(thing) {
         thing.tokenVerified = true;
-        console.log(`things/${thingName}/shadow/${thing.operation}/error`);
         thing.fn(false);
-        // socket.emit(`things/${thingName}/shadow/${thing.operation}/error`);
       }
     });
 
