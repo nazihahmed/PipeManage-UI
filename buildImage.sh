@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 GIT_SHORT=$(git rev-parse --short HEAD)
-echo "building docker image: ${GIT_SHORT}"
+echo "building Docker image: ${GIT_SHORT}"
 docker build -t 925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHORT} .
 aws ecr get-login --no-include-email | bash
 docker push 925898274702.dkr.ecr.us-west-2.amazonaws.com/app-intel:${GIT_SHORT} &&
