@@ -110,7 +110,10 @@ export default {
     });
   },
   getShadow: (thingName, props, fn) => {
-    initThing(thingName, props);
+    let isRegistered = isThingRegistered(thingName);
+    if(!isRegistered) {
+      initThing(thingName, props);
+    }
     console.log("thing was added",things);
     // foreign sockets
     listenToForeignSocket(thingName,['update','delete']);

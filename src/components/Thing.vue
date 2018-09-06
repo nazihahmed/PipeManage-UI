@@ -125,7 +125,9 @@ export default {
           this.success('Shadow was updated!', {
             timeout: 2000
           });
-          this.getShadow(true);
+          if(!hideAlert) {
+            setTimeout(() => this.getShadow(true),1000);
+          }
         },
         deleteFn: res => {
           if(!res) {
@@ -153,18 +155,22 @@ export default {
           });
         }
       }, shadow => {
+        if(hideAlert) {
+          console.log("hide true");
+          if(shadow) {
+            return this.shadow = shadow;
+          }
+          return;
+        }
         if(!shadow) {
           return this.error('No shadow was found, update first', {
             timeout: 2000
           });
         }
-        console.log("got shadow", shadow);
         this.shadow = shadow;
-        if(!hideAlert) {
-          this.info('Received shadow', {
-            timeout: 2000
-          });
-        }
+        this.info('Received shadow', {
+          timeout: 2000
+        });
       });
     },
     updateShadow() {
