@@ -25,10 +25,8 @@ const subscribeToTopic = (topic, emittingTopic) => {
 
 resolveOrReject = (token, resolve, reject) => {
   if (token === null) {
-    console.log("token is null")
     return reject();
   }
-  console.log("resolve",token)
   resolve(token);
 };
 
@@ -62,7 +60,6 @@ const getThingByToken = (token, tokenNotVerified) => {
 
 const getThingByName = (name, tokenNotVerified) => {
   const things = registeredThings.filter(thing => thing.thingName === name);
-  console.log("filtered things",things)
   return tokenNotVerfiedFilter(things, tokenNotVerified);
 };
 
@@ -70,7 +67,7 @@ const registerInterestInThing = (thingName, fn) => {
   return new Promise(async (resolve,reject) => {
     try {
       let thing = getThingByName(thingName);
-      console.log("try to get thing",thing)
+      console.log("get thing request",thing)
       if (!thing) {
         thingShadows.register( thingName, {}, async () => {
           const token = await getShadow(thingName);
