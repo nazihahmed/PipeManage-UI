@@ -117,13 +117,15 @@ export default {
     getShadow(isUpdate) {
       shadow.getShadow(this.name, {
         updateFn: shadow => {
+          console.log("update fn was registered")
           if(!shadow) {
             return this.error('Failed to update shadow', {
               timeout: 2000
             });
           }
+          console.log("get latest shadow")
           if(!isUpdate) {
-            setTimeout(() => this.getShadow(true),500);
+            setTimeout(() => this.getShadow(true),700);
           }
         },
         deleteFn: res => {
@@ -153,7 +155,7 @@ export default {
         }
       }, shadow => {
         if(isUpdate) {
-          console.log("hide true");
+          console.log("hide true", shadow);
           if(shadow) {
             this.success('Shadow was updated!', {
               timeout: 2000

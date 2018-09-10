@@ -70,6 +70,7 @@ const registerInterestInThing = (thingName, fn) => {
   return new Promise(async (resolve,reject) => {
     try {
       let thing = getThingByName(thingName);
+      console.log("try to get thing",thing)
       if (!thing) {
         thingShadows.register( thingName, {}, async () => {
           const token = await getShadow(thingName);
@@ -87,6 +88,7 @@ const registerInterestInThing = (thingName, fn) => {
           resolve();
         });
       } else {
+        console.log("no thing")
         const token = await getShadow(thingName);
         if (token === null) {
           reject();
