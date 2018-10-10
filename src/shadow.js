@@ -28,19 +28,21 @@ const listenToForeignSocket = (thingName, methods) => {
       let thing = isThingRegistered(thingName);
       console.log("listen to socket",successSocket, thing);
       socket.on(successSocket, shadow => {
-        console.log(`received ${method} action`, shadow, thing);
+        console.log(`received ${method} action`, shadow);
+        console.log("check thing",thing)
         if(thing && thing[`${method}Fn`]) {
           // prevent updating more than once for same version
-          console.log("before updating check version", shadow, thing);
+
           if(method === 'delete' && !thing.localDelete) {
             return thing[`${method}Fn`](true);
           }
-          if((method === 'update' && shadow.version === thing.version) ||
-             (method === 'update' && thing.localUpdate) ||
-             (method === 'delete' && thing.localDelete)
-          ) {
-            return;
-          }
+          // if((method === 'update' && shadow.version === thing.version) ||
+          //    (method === 'update' && thing.localUpdate) ||
+          //    (method === 'delete' && thing.localDelete)
+          // ) {
+          //   return;
+          // }
+          console.log("inside response for socket", shadow)
           thing[`${method}Fn`](shadow);
           if(shadow) {
             thing.version = shadow.version;
@@ -64,20 +66,20 @@ const initThing = (thingName, props) => {
   if(!thing) {
     return;
   }
-  const path = `thing/${thingName}/update`;
-  if(sockets.indexOf(path) === -1) {
-    sockets.push(path);
-    socket.on(`${path}`,(data) => {
-      console.log("check for localUpdate",thing.localThingUpdate)
-      if(thing.localThingUpdate) {
-        return thing.localThingUpdate = false;
-      }
-      if(!data) {
-        return;
-      }
-      thing.updateThingFn(data);
-    });
-  }
+  // const path = `thing/${thingName}/update`;
+  // if(sockets.indexOf(path) === -1) {
+  //   sockets.push(path);
+  //   socket.on(`${path}`,(data) => {
+  //     console.log("check for localUpdate",thing.localThingUpdate)
+  //     if(thing.localThingUpdate) {
+  //       return thing.localThingUpdate = false;
+  //     }
+  //     if(!data) {
+  //       return;
+  //     }
+  //     thing.updateThingFn(data);
+  //   });
+  // }
 }
 
 socket.on('disconnect', () => console.log("disconnected from socket"));
@@ -110,16 +112,15 @@ export default {
     });
   },
   getShadow: (thingName, props, fn) => {
-    let isRegistered = isThingRegistered(thingName);
-    if(!isRegistered) {
+    let thing = isThingRegistered(thingName);
+    if(!thing) {
       initThing(thingName, props);
+      console.log("thing was added",things);
+      // foreign sockets
+      listenToForeignSocket(thingName,['update','delete']);
     }
-    console.log("thing was added",things);
-    // foreign sockets
-    listenToForeignSocket(thingName,['update','delete']);
     socket.emit('getShadow',thingName, (data) => {
-      let thing = isThingRegistered(thingName);
-      thing.version = data.version;
+      // thing.version = data && data.version ? data.version : 0;
       fn(data);
     });
   },
@@ -141,10 +142,7 @@ export default {
     console.log("add updateFn to",thing);
     thing.localUpdate = true;
     socket.emit('updateShadow',{thingName, shadow}, (data) => {
-      if(!data) {
-        thing.version--;
-      }
-      console.log("new version is",thing);
+      console.log("updateShadow",data)
       thing.updateFn(data);
       thing.localUpdate = false;
     });

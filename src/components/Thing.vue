@@ -21,7 +21,6 @@
               </b-form-input>
             </b-form-group>
             <p><strong>Name</strong>: {{thing.thingName}}</p>
-            <p><strong>ARN</strong>: {{thing.thingArn}}</p>
             <p v-if="thing.thingTypeName"><strong>type</strong>: {{thing.thingTypeName}}</p>
             <b-form-group label="Country:"
                           v-if="thing && edit"
@@ -34,8 +33,6 @@
               </b-form-input>
             </b-form-group>
             <p v-if="thing.attributes.country && !edit"><strong v-if="thing">Country:</strong>{{thing.attributes.country}}</p>
-            <p><strong>ID</strong>: {{thing.thingId}}</p>
-            <p><strong>Defalt Client ID</strong>: {{thing.defaultClientId}}</p>
             <b-button-group vertical v-if="!edit">
               <b-button variant="primary" @click="getShadow()">Get Shadow</b-button>
               <b-button variant="warning" @click="updateShadow()">Update Shadow</b-button>
@@ -47,20 +44,80 @@
           </b-col>
           <b-col cols="7">
             <br>
-            <vue-json-editor v-model="shadow" :showBtns="false"></vue-json-editor>
           </b-col>
+      </b-row><br>
+      <b-row v-if="sensors">
+        <b-col cols="12">
+          <b-card-group deck>
+            <b-card v-for="(sensor, index) in sensors"
+                    v-if="index<3"
+                    :key="index"
+                    header-tag="header"
+                    footer-tag="footer">
+                <h6 slot="header"
+                    class="mb-0">{{sensor.name}}</h6>
+                <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
+                <p class="card-text">Pump: <b-badge :variant="getRelayVariant(sensor.relay)">{{getRelayText(sensor.relay)}}</b-badge></p>
+                <b-button @click="toggleRelayState(sensor.relay)"
+                          :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+            </b-card>
+          </b-card-group>
+          <br>
+          <b-card-group deck>
+            <b-card v-for="(sensor, index) in sensors"
+                    v-if="index>=3"
+                    :key="index + '-2'"
+                    header-tag="header"
+                    footer-tag="footer">
+                <h6 slot="header"
+                    class="mb-0">{{sensor.name}}</h6>
+                <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
+                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge></p>
+                <b-button @click="toggleRelayState(sensor.relay)"
+                          :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+            </b-card>
+          </b-card-group>
+        </b-col>
       </b-row>
   </b-container>
 </template>
 <script>
 import shadow from '@/shadow';
-import vueJsonEditor from 'vue-json-editor'
-import _ from 'lodash'
+import _ from 'lodash';
+const getPinsFromState = (reported,key) => {
+  return Object.keys(reported)
+        .filter(pin => reported[pin].name && reported[pin].name.indexOf(key) != -1)
+        .reduce((obj, key) => {
+          obj[key] = reported[key];
+          if(reported[key].name) {
+            obj[key]['number'] = parseInt(reported[key].name.split(" ")[1]);
+            obj[key]['pin'] = key;
+          }
+          return obj;
+        }, {})
+};
+
+const objectToArray = (obj) => {
+  return Object.keys(obj).map((k) => obj[k])
+};
+
+const mapSensorsRelays = (sensors,relays) => {
+  sensors = objectToArray(objectToArray(sensors));
+  relays = objectToArray(objectToArray(relays));
+  return sensors.map(sensor => {
+    const relay = relays.find(relay => relay.number === sensor.number);
+    return {
+      ...sensor,
+      relay
+    };
+  });
+}
+
 export default {
   data () {
     return {
-      shadow: {},
       thing: {},
+      sensors: {},
       edit: false,
       updating: false,
       newCountry: "",
@@ -73,6 +130,35 @@ export default {
     this.getThing();
   },
   methods: {
+    getSensorText(sensor) {
+      return sensor.state === 1 ? 'OK' : 'LOW LEVEL';
+    },
+    getRelayText(relay) {
+      return relay.state === 1 ? 'ON' : 'OFF';
+    },
+    getSensorTextClass(sensor) {
+      return sensor.state === 1 ? 'text-success' : 'text-danger';
+    },
+    getRelayVariant(relay) {
+      return relay.state === 1 ? 'primary' : 'secondary';
+    },
+    getRelayOnOffText(relay) {
+      return relay.state === 1 ? 'Off' : 'On';
+    },
+    getRelayOnOffVariant(relay) {
+      return relay.state === 1 ? 'secondary' : 'primary';
+    },
+    toggleRelayState(relay) {
+      shadow.updateShadow(this.name,  {
+        "state": {
+          "desired": {
+            [relay.pin]: {
+              state: relay.state === 0 ? 1 : 0
+            }
+          }
+        }
+      });
+    },
     switchEditMode() {
       if(this.edit) {
         // was in edit and canceling
@@ -117,13 +203,11 @@ export default {
     getShadow(isUpdate) {
       shadow.getShadow(this.name, {
         updateFn: shadow => {
-          console.log("update fn was registered")
           if(!shadow) {
             return this.error('Failed to update shadow', {
               timeout: 2000
             });
           }
-          console.log("get latest shadow")
           if(!isUpdate) {
             setTimeout(() => this.getShadow(true),700);
           }
@@ -134,7 +218,6 @@ export default {
               timeout: 2000
             });
           }
-          this.shadow = {};
           this.success('Shadow was deleted!', {
             timeout: 2000
           });
@@ -148,19 +231,20 @@ export default {
             });
           }
           this.getThing();
-          console.log("updated thing details", data)
           this.info('Updated thing', {
             timeout: 2000
           });
         }
       }, shadow => {
         if(isUpdate) {
-          console.log("hide true", shadow);
           if(shadow) {
-            this.success('Shadow was updated!', {
-              timeout: 2000
-            });
-            return this.shadow = shadow;
+            console.log(" is update")
+            if(shadow.state && shadow.state.reported) {
+              const reported = JSON.parse(JSON.stringify(shadow.state.reported));
+              return this.sensors = mapSensorsRelays(getPinsFromState(reported, 'sensor'), getPinsFromState(reported, 'relay'));
+              console.log("sensors",this.sensors)
+            }
+            // return this.shadow = shadow;
           }
           return;
         }
@@ -169,7 +253,10 @@ export default {
             timeout: 2000
           });
         }
-        this.shadow = shadow;
+        if(shadow.state && shadow.state.reported) {
+          const reported = JSON.parse(JSON.stringify(shadow.state.reported));
+          this.sensors = mapSensorsRelays(getPinsFromState(reported, 'sensor'), getPinsFromState(reported, 'relay'));
+        }
         this.info('Received shadow', {
           timeout: 2000
         });
@@ -181,9 +268,6 @@ export default {
     deleteShadow() {
       shadow.deleteShadow(this.name);
     }
-  },
-  components: {
-    vueJsonEditor
   }
 }
 </script>

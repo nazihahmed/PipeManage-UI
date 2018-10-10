@@ -43,6 +43,7 @@ const deleteShadow = thingName => {
 };
 
 const updateShadow = (thingName, shadow) => {
+  console.log("updating shadow with",JSON.stringify(shadow.state.desired))
   return new Promise((resolve, reject) => {
     resolveOrReject(thingShadows.update(thingName, shadow), resolve, reject);
   })
@@ -69,6 +70,7 @@ const registerInterestInThing = (thingName, fn) => {
       let thing = getThingByName(thingName);
       console.log("get thing request",thing)
       if (!thing) {
+        console.log("register thing")
         thingShadows.register( thingName, {}, async () => {
           const token = await getShadow(thingName);
           if (token === null) {
@@ -98,6 +100,7 @@ const registerInterestInThing = (thingName, fn) => {
         resolve();
       }
     } catch (err) {
+      console.log("failure reason",err)
       reject();
       fn(false);
     }
@@ -123,128 +126,135 @@ const deleteThingShadow = async (thingName, fn) => {
 
 const iot = new AWS.Iot({apiVersion: '2015-05-28'});
 let clients = [];
+let latestEmittedVersion = 0;
 const initSocket = () => {
   io.on('connection', socket => {
-    clients.push(socket);
-    socket.on('getThings', fn => {
-      iot.listThings({}, (err,data) => {
-        if(err) {
-          fn(false);
-        }
-        fn(data);
-      });
-    })
-
-    socket.on('getThing', (thingName, fn) => {
-      iot.describeThing({thingName}, (err,data) => {
-        if(err) {
-          fn(false);
-        }
-        fn(data);
-      });
-    })
-
-    socket.on('updateThing', ({thingName, attributes}, fn) => {
-      var params = {
-        thingName,
-        attributePayload: {
-          attributes,
-          merge: true
-        }
-      };
-      iot.updateThing(params, function(err, data) {
-        if(err) {
-          fn(false);
-        }
-        fn(data);
-        io.emit(`thing/${thingName}/update`, data);
-      });
-    })
-
-    socket.on('getShadow', async (thingName, fn) => {
-      console.log(`received interest in ${thingName}`)
-      try {
-        await registerInterestInThing(thingName, fn);
-        console.log("received registration token",registeredThings)
-      } catch(err) {
-        console.log("couldn't register interst in token",err);
-        fn(false);
-      }
-    });
-
-    socket.on('updateShadow', async ({thingName, shadow}, fn) => {
-      try {
-        await updateThingShadow(thingName, shadow, fn);
-      } catch(err) {
-        console.error(err);
-        console.log(`error to update ${thingName} shadow`);
-        fn(false);
-      }
-    });
-
-    socket.on('deleteShadow', async (thingName, fn) => {
-      try {
-        await deleteThingShadow(thingName, fn);
-      } catch(err) {
-        console.error(err);
-        console.log(`failed to delete ${thingName} shadow`);
-        fn(false);
-      }
-    });
-
-    // respond to getting the shadow
-    thingShadows.on('status',(thingName, stat, clientToken, stateObject) => {
-      let thing = getThingByToken(clientToken, true);
-      console.log("received status",thingName, stat, clientToken)
-      if(thing && stateObject) {
-        thing.tokenVerified = true;
-        if(stat === 'accepted') {
-          if (thing.operation === 'delete') {
-            io.emit(`things/${thing.thingName}/shadow/delete`);
-            thingShadows.unregister(thingName);
-            registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
+    if(clients.indexOf(socket) === -1) {
+      clients.push(socket);
+      socket.on('getThings', fn => {
+        iot.listThings({}, (err,data) => {
+          if(err) {
+            fn(false);
           }
-          if(thing.operation === 'update') {
-            io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+          fn(data);
+        });
+      })
+
+      socket.on('getThing', (thingName, fn) => {
+        iot.describeThing({thingName}, (err,data) => {
+          if(err) {
+            fn(false);
           }
+          fn(data);
+        });
+      })
+
+      socket.on('updateThing', ({thingName, attributes}, fn) => {
+        var params = {
+          thingName,
+          attributePayload: {
+            attributes,
+            merge: true
+          }
+        };
+        iot.updateThing(params, function(err, data) {
+          if(err) {
+            fn(false);
+          }
+          fn(data);
+          io.emit(`thing/${thingName}/update`, data);
+        });
+      })
+
+      socket.on('getShadow', async (thingName, fn) => {
+        console.log(`received interest in ${thingName}`)
+        try {
+          await registerInterestInThing(thingName, fn);
+          console.log("received registration token",registeredThings)
+        } catch(err) {
+          console.log("couldn't register interst in token",err);
+          fn(false);
+        }
+      });
+
+      socket.on('updateShadow', async ({thingName, shadow}, fn) => {
+        try {
+          await updateThingShadow(thingName, shadow, fn);
+        } catch(err) {
+          console.error(err);
+          console.log(`error to update ${thingName} shadow`);
+          fn(false);
+        }
+      });
+
+      socket.on('deleteShadow', async (thingName, fn) => {
+        try {
+          await deleteThingShadow(thingName, fn);
+        } catch(err) {
+          console.error(err);
+          console.log(`failed to delete ${thingName} shadow`);
+          fn(false);
+        }
+      });
+
+      // respond to getting the shadow
+      thingShadows.on('status',(thingName, stat, clientToken, stateObject) => {
+        let thing = getThingByToken(clientToken, true);
+        // console.log("received status",thingName, stat, clientToken)
+        if(thing && stateObject) {
+          thing.tokenVerified = true;
+          if(stat === 'accepted') {
+            if (thing.operation === 'delete') {
+              io.emit(`things/${thing.thingName}/shadow/delete`);
+              thingShadows.unregister(thingName);
+              return registeredThings = registeredThings.filter(thing => thing.thingName !== thingName);
+            }
+            if(thing.operation === 'update') {
+              // return io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
+            }
+            return thing.fn(stateObject);
+          }
+          console.log("failed to get shadow", thingName, stat, clientToken, stateObject)
+          thing.fn(false);
+        }
+      });
+
+      // respond to update operation
+      thingShadows.on('delta',(thingName, stateObject) => {
+        let thing = getThingByName(thingName, true);
+        console.log("received delta", thingName, stateObject)
+        if(thing && stateObject && thing.operation === 'update') {
+          thing.tokenVerified = true;
+          console.log("emittting to all others", `things/${thing.thingName}/shadow/update`)
+          io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
           thing.fn(stateObject);
         }
-        console.log("failed to get shadow")
-        thing.fn(false);
-      }
-    });
+      });
 
-    // respond to update operation
-    thingShadows.on('delta',(thingName, stateObject) => {
-      let thing = getThingByName(thingName, true);
-      console.log("received delta", thingName, stateObject)
-      if(thing && stateObject && thing.operation === 'update') {
-        thing.tokenVerified = true;
-        console.log("emittting to all others", `things/${thing.thingName}/shadow/update`)
-        io.emit(`things/${thing.thingName}/shadow/update`,stateObject);
-        thing.fn(stateObject);
-      }
-    });
-
-    // any change due to someone else changing it from the outside
-    thingShadows.on('foreignStateChange', (thingName, operation, stateObject) => {
-      console.log('------------foreignSTATECHANGE');
-      io.emit(`things/${thingName}/shadow/${operation}`,stateObject);
-    });
+      // any change due to someone else changing it from the outside
+      thingShadows.on('foreignStateChange', (thingName, operation, stateObject) => {
+        if(latestEmittedVersion !== stateObject.version) {
+          console.log('------------foreignSTATECHANGE',stateObject.version);
+          io.emit(`things/${thingName}/shadow/${operation}`,stateObject);
+        }
+        latestEmittedVersion = stateObject.version;
+      });
 
 
-    thingShadows.on('timeout',(thingName, clientToken) => {
-      let thing = getThingByToken(clientToken, true);
-      console.log("received timeout")
-      if(thing) {
-        thing.tokenVerified = true;
-        thing.fn(false);
-      }
-    });
+      thingShadows.on('timeout',(thingName, clientToken) => {
+        let thing = getThingByToken(clientToken, true);
+        console.log("received timeout")
+        if(thing) {
+          thing.tokenVerified = true;
+          thing.fn(false);
+        }
+      });
 
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
-    });
+      socket.on('disconnect', () => {
+        console.log('user disconnected');
+        clients.pop(socket)
+      });
+    }
   });
 };
 
