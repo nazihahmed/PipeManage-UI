@@ -3,7 +3,7 @@
 
     <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
 
-    <b-navbar-brand href="/">App</b-navbar-brand>
+    <b-navbar-brand href="/">Chiller Auto Filler</b-navbar-brand>
 
     <b-collapse is-nav id="nav_collapse">
 
@@ -17,7 +17,7 @@
         <b-nav-item-dropdown right>
           <!-- Using button-content slot -->
           <template slot="button-content">
-            <em>User</em>
+            <em>Test User</em>
           </template>
           <b-dropdown-item href="#">Profile</b-dropdown-item>
           <b-dropdown-item href="#">Signout</b-dropdown-item>

@@ -33,13 +33,6 @@
               </b-form-input>
             </b-form-group>
             <p v-if="thing.attributes.country && !edit"><strong v-if="thing">Country:</strong>{{thing.attributes.country}}</p>
-            <b-button-group vertical v-if="!edit">
-              <b-button variant="primary" @click="getShadow()">Get Shadow</b-button>
-              <b-button variant="warning" @click="updateShadow()">Update Shadow</b-button>
-              <b-button variant="danger" @click="deleteShadow()">Delete Shadow</b-button>
-            </b-button-group>
-            <br><br>
-            <b-button variant="info" @click="insertSample()" v-if="!edit">Insert Sample Data</b-button>
             <b-button variant="info" @click="saveChanges()" v-if="edit">{{updating ? "Updating...":"Save Changes"}}</b-button>
           </b-col>
           <b-col cols="7">
@@ -57,9 +50,13 @@
                 <h6 slot="header"
                     class="mb-0">{{sensor.name}}</h6>
                 <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
-                <p class="card-text">Pump: <b-badge :variant="getRelayVariant(sensor.relay)">{{getRelayText(sensor.relay)}}</b-badge></p>
-                <b-button @click="toggleRelayState(sensor.relay)"
-                          :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+                <p class="card-text">Pump: <b-badge :variant="getRelayVariant(sensor.relay)">{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary">AUTO</b-badge></p>
+                <b-button-group size="sm">
+                  <b-button @click="toggleRelayState(sensor.relay)"
+                  :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+                  <b-button @click="toggleRelayState(sensor.relay)"
+                  variant="success">Auto Mode</b-button>
+                </b-button-group>
             </b-card>
           </b-card-group>
           <br>
@@ -72,9 +69,13 @@
                 <h6 slot="header"
                     class="mb-0">{{sensor.name}}</h6>
                 <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
-                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge></p>
-                <b-button @click="toggleRelayState(sensor.relay)"
-                          :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary">AUTO</b-badge></p>
+                <b-button-group size="sm">
+                  <b-button @click="toggleRelayState(sensor.relay)"
+                  :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
+                  <b-button @click="toggleRelayState(sensor.relay)"
+                  variant="success">Auto Mode</b-button>
+                </b-button-group>
             </b-card>
           </b-card-group>
         </b-col>
