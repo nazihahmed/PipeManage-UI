@@ -50,12 +50,13 @@
                 <h6 slot="header"
                     class="mb-0">{{sensor.name}}</h6>
                 <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
-                <p class="card-text">Pump: <b-badge :variant="getRelayVariant(sensor.relay)">{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary">AUTO</b-badge></p>
+                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary" v-if="sensor.relay.auto">AUTO</b-badge></p>
                 <b-button-group size="sm">
                   <b-button @click="toggleRelayState(sensor.relay)"
+                  v-if="!sensor.relay.auto"
                   :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
-                  <b-button @click="toggleRelayState(sensor.relay)"
-                  variant="success">Auto Mode</b-button>
+                  <b-button @click="toggleAutoState(sensor.relay)"
+                  :variant="getAutoVariant(sensor.relay)">{{getAutoText(sensor.relay)}}</b-button>
                 </b-button-group>
             </b-card>
           </b-card-group>
@@ -69,12 +70,13 @@
                 <h6 slot="header"
                     class="mb-0">{{sensor.name}}</h6>
                 <em slot="footer" :class="getSensorTextClass(sensor)">{{getSensorText(sensor)}}</em>
-                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary">AUTO</b-badge></p>
+                <p class="card-text">Pump: <b-badge :variant=getRelayVariant(sensor.relay)>{{getRelayText(sensor.relay)}}</b-badge> <b-badge variant="primary" v-if="sensor.relay.auto">AUTO</b-badge></p>
                 <b-button-group size="sm">
                   <b-button @click="toggleRelayState(sensor.relay)"
+                  v-if="!sensor.relay.auto"
                   :variant="getRelayOnOffVariant(sensor.relay)">Turn {{getRelayOnOffText(sensor.relay)}} Pump</b-button>
-                  <b-button @click="toggleRelayState(sensor.relay)"
-                  variant="success">Auto Mode</b-button>
+                  <b-button @click="toggleAutoState(sensor.relay)"
+                  :variant="getAutoVariant(sensor.relay)">{{getAutoText(sensor.relay)}}</b-button>
                 </b-button-group>
             </b-card>
           </b-card-group>
@@ -107,6 +109,7 @@ const mapSensorsRelays = (sensors,relays) => {
   relays = objectToArray(objectToArray(relays));
   return sensors.map(sensor => {
     const relay = relays.find(relay => relay.number === sensor.number);
+    console.log("relay is",relay)
     return {
       ...sensor,
       relay
@@ -149,12 +152,29 @@ export default {
     getRelayOnOffVariant(relay) {
       return relay.state === 1 ? 'secondary' : 'primary';
     },
+    getAutoText(relay) {
+      return relay.auto ? 'Turn Off Auto Mode' : 'Auto Mode';
+    },
+    getAutoVariant(relay) {
+      return relay.auto ? 'danger' : 'success';
+    },
     toggleRelayState(relay) {
       shadow.updateShadow(this.name,  {
         "state": {
           "desired": {
             [relay.pin]: {
               state: relay.state === 0 ? 1 : 0
+            }
+          }
+        }
+      });
+    },
+    toggleAutoState(relay) {
+      shadow.updateShadow(this.name,  {
+        "state": {
+          "desired": {
+            [relay.pin]: {
+              auto: relay.auto === 0 ? 1 : 0
             }
           }
         }
