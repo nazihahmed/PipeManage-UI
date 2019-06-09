@@ -1,5 +1,5 @@
 ## Overview
-PipeMange UI built with AWS IOT, Socket.io, Vue.JS
+PipeManage UI built with AWS IOT, Socket.io, Vue.JS
 
 ## Build Setup
 
